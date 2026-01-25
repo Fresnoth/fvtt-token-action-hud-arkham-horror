@@ -1,30 +1,23 @@
 name: Create Module Files For GitHub Release
+name: Create Module Files For GitHub Release
 
 env:
   # The URL used for the module's "Project URL" link on FoundryVTT's website.
-  project_url: "https://github.com/${{github.repository}}"
+  project_url: "https://github.com/${{ github.repository }}"
 
   # A URL that will always point to the latest manifest.
   # FoundryVTT uses this URL to check whether the current module version that
-  # is installed is the latest version. This URL should NOT change,
-  # otherwise FoundryVTT won't be able to perform this check.
-  latest_manifest_url: "https://github.com/${{github.repository}}/releases/latest/download/module.json"
+  # is installed is the latest version. This URL should NOT change.
+  latest_manifest_url: "https://github.com/${{ github.repository }}/releases/latest/download/module.json"
 
-  # The URL to the module archive associated with the module release being
-  # processed by this workflow.
-  # Note: this is also used for manual runs (workflow_dispatch) where the tag is provided as input.
-  release_module_url: "https://github.com/${{github.repository}}/releases/download/${{ github.event.release.tag_name || inputs.tag }}/module.zip"
+  # The URL to the module archive associated with the module release being processed.
+  # For manual runs, this uses the provided input tag.
+  release_module_url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name || inputs.tag }}/module.zip"
 
-on: 
-  # Only run this workflow when a release is published.
-  # To modify this workflow when other events occur, see:
-  #   - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
-  #   - https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
-  #   - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
-  #
-  # Note that some steps may depend on context variables that are only
-  # available for release events, so if you add other events, you may need to
-  # alter other parts of this workflow.
+  # Minimum Arkham Horror RPG FVTT system version required for this module.
+  required_system_min_version: "13.0.32"
+
+on:
   release:
     types: [published]
 
@@ -32,44 +25,40 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to package (e.g. v13.0.0)'
+        description: "Release tag to package (e.g. v13.0.0)"
         required: true
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-  
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Determine Tag
-        id: tag
-            with:
-              # For manual runs, check out the tag being packaged.
-              # For release runs, check out the release tag.
-              ref: ${{ github.event.release.tag_name || inputs.tag }}
-
-          - name: Determine Release Metadata
-            id: meta
-            shell: bash
-            run: |
-              TAG="${{ github.event.release.tag_name || inputs.tag }}"
-              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-              # Foundry expects a semver-ish version string; strip a leading 'v' if present.
-              VERSION="${TAG#v}"
-              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Determine Release Metadata
+        id: meta
+        shell: bash
         run: |
-          echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> $GITHUB_OUTPUT
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            echo "No tag available. For manual runs, provide inputs.tag (e.g. v13.0.0)." >&2
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-        uses: battila7/get-version-action@v2
+          cache: npm
 
       - name: Install Dependencies
         run: npm ci
@@ -77,48 +66,41 @@ jobs:
       - name: Build (Rollup)
         run: npm run build
 
-      # Modify "module.json" with values specific to the release.
-      # This updates the manifest in-place in the action's filesystem only.
       - name: Modify Module Manifest With Release-Specific Values
         env:
           VERSION: ${{ steps.meta.outputs.version }}
           URL: ${{ env.project_url }}
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
+          SYSTEM_MIN: ${{ env.required_system_min_version }}
         run: |
           jq --arg VERSION "$VERSION" \
              --arg URL "$URL" \
              --arg MANIFEST "$MANIFEST" \
              --arg DOWNLOAD "$DOWNLOAD" \
-             '.version=$VERSION | .url=$URL | .manifest=$MANIFEST | .download=$DOWNLOAD | .esmodules=["./scripts/fvtt-token-action-hud-arkham-horror.min.js"]' \
+             --arg SYSTEM_MIN "$SYSTEM_MIN" \
+             '.version=$VERSION
+              | .url=$URL
+              | .manifest=$MANIFEST
+              | .download=$DOWNLOAD
+              | .esmodules=["./scripts/fvtt-token-action-hud-arkham-horror.min.js"]
+              | (.relationships.systems[] | select(.id=="arkham-horror-rpg-fvtt") | .compatibility.minimum)=$SYSTEM_MIN' \
              module.json > module.json.tmp
           mv module.json.tmp module.json
 
-      # Create a "module.zip" archive containing all the module's required files.
-      # If you have other directories or files that will need to be added to
-      # your packaged module, add them here.
       - name: Create Module Archive
         run: |
-          # Note that `zip` will only emit warnings when a file or directory
-          # doesn't exist, it will not fail.
-          zip                                  \
-          `# Options`                          \
-          --recurse-paths                      \
-          `# The name of the output file`      \
-          ./module.zip                         \
-          `# The files that will be included.` \
-          module.json                          \
-          readme.md                            \
-          LICENSE                              \
-          languages/                           \
-          scripts/                             \
-          styles/                              \
-          # Don't forget to add a backslash at the end of the line for any
-          # additional files or directories!
+          zip \
+            --recurse-paths \
+            ./module.zip \
+            module.json \
+            readme.md \
+            LICENSE \
+            languages/ \
+            scripts/ \
+            styles/
 
-      # Update the GitHub release with the manifest and module archive files.
       - name: Update Release with Files
-        id: create_version_release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
@@ -126,6 +108,7 @@ jobs:
           draft: ${{ github.event.release.draft || false }}
           prerelease: ${{ github.event.release.prerelease || false }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './module.json, ./module.zip'
+          artifacts: "./module.json, ./module.zip"
           tag: ${{ steps.meta.outputs.tag }}
           body: ${{ github.event.release.body || '' }}
+          # Don't forget to add a backslash at the end of the line for any

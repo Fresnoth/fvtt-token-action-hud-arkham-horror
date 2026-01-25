@@ -13,7 +13,7 @@
   "version": "13.0.0",
   "compatibility": {
     "minimum": "13",
-    "verified": "13.313",
+    "verified": "13.351",
     "maximum": "13"
   },
   "esmodules": [
@@ -36,7 +36,7 @@
         "id": "arkham-horror-rpg-fvtt",
         "type": "system",
         "compatibility": {
-          "minimum": "0.0.0"
+          "minimum": "13.0.32"
         }
       }
     ],
