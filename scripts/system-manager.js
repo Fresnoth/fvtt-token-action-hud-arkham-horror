@@ -30,9 +30,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          * @returns {object} The available roll handlers
          */
         getAvailableRollHandlers () {
-            const coreTitle = 'Core Template'
-            const choices = { core: coreTitle }
-            return choices
+            return { core: 'Arkham Horror (Core)' }
         }
 
         /**
@@ -80,11 +78,11 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          */
         registerStyles () {
             return {
-                template: {
+                arkhamHorror: {
                     class: 'tah-style-template-style', // The class to add to first DIV element
                     file: 'tah-template-style', // The file without the css extension
                     moduleId: MODULE.ID, // The module ID
-                    name: 'Template Style' // The name to display in the Token Action HUD Core 'Style' module setting
+                    name: 'Arkham Horror Style' // The name to display in the Token Action HUD Core 'Style' module setting
                 }
             }
         }

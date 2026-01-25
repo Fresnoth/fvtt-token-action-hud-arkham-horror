@@ -1,1 +1,12 @@
 node_modules/*
+
+# Local editor settings (not committed)
+.vscode/
+
+# Build artifacts
+scripts/*.min.js
+
+# Local documentation (not committed)
+GUIDE.md
+FEATURES.MD
+PACKAGING.md

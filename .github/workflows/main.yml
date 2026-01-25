@@ -37,6 +37,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
       # Extract version embedded in the tag.
       # This step expects the tag to be one of the following formats:
       #   - "v<major>.<minor>.<patch>" (e.g., "v1.2.3")
@@ -48,22 +54,28 @@ jobs:
         id: get_version
         uses: battila7/get-version-action@v2
 
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build (Rollup)
+        run: npm run build
+
       # Modify "module.json" with values specific to the release.
-      # Since the values for the "version" and "url" keys aren't known ahead of
-      # time, the manifest file in the repository is updated with these values.
-      #
-      # While this does modify the manifest file in-place, the changes are not
-      # commited to the repository, and only exist in the action's filesystem.
+      # This updates the manifest in-place in the action's filesystem only.
       - name: Modify Module Manifest With Release-Specific Values
-        id: sub_manifest_link_version
-        uses: cschleiden/replace-tokens@v1
-        with:
-          files: 'module.json'
         env:
-          VERSION: ${{steps.get_version.outputs.version-without-v}}
+          VERSION: ${{ steps.get_version.outputs.version-without-v }}
           URL: ${{ env.project_url }}
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
+        run: |
+          jq --arg VERSION "$VERSION" \
+             --arg URL "$URL" \
+             --arg MANIFEST "$MANIFEST" \
+             --arg DOWNLOAD "$DOWNLOAD" \
+             '.version=$VERSION | .url=$URL | .manifest=$MANIFEST | .download=$DOWNLOAD | .esmodules=["./scripts/fvtt-token-action-hud-arkham-horror.min.js"]' \
+             module.json > module.json.tmp
+          mv module.json.tmp module.json
 
       # Create a "module.zip" archive containing all the module's required files.
       # If you have other directories or files that will need to be added to

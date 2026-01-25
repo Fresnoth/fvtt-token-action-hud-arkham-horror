@@ -1,51 +1,45 @@
-![Downloads](https://img.shields.io/github/downloads/Larkinabout/fvtt-token-action-hud-template/latest/module.zip?color=2b82fc&label=DOWNLOADS&style=for-the-badge) [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Ftoken-action-hud-template&colorB=448d34&style=for-the-badge)](https://forge-vtt.com/bazaar#package=token-action-hud-template)
+# Token Action HUD Arkham Horror RPG
 
-# Token Action HUD Template
+System module for [**Token Action HUD Core**](https://foundryvtt.com/packages/token-action-hud-core) that adds a fast action HUD for the [**Arkham Horror RPG (FVTT)**](https://github.com/MrTheBino/arkham-horror-rpg-fvtt) system.
 
-Token Action HUD is a repositionable HUD of actions for a selected token.
+This is an **ALPHA** build focused on usability and stability. For planned work and deferred ideas, see [Future Features](futurefeatures.md).
 
-![Token Action HUD](.github/readme/token-action-hud.gif)
+## Requirements
 
-# Features
-- Make rolls directly from the HUD instead of opening your character sheet.
-- Use items from the HUD or right-click an item to open its sheet.
-- Move the HUD and choose to expand the menus up or down.
-- Unlock the HUD to customise layout and groups per user, and actions per actor.
-- Add your own macros, journal entries and roll table compendiums.
+- Foundry VTT: `v13`
+- Arkham Horror RPG System: `>= 13.0.32`
+- Token Action HUD Core: `>= 2.0.0`
 
-# Installation
+## What is available in ALPHA (current tabs)
 
-## Method 1
-1. On Foundry VTT's **Configuration and Setup** screen, go to **Add-on Modules**
-2. Click **Install Module**
-3. Search for **Token Action HUD Pathfinder 2** 
-4. Click **Install** next to the module listing
+- **Dicepool**: DP +/-, Damage/Horror +/- , Refresh, Clear, Strain, Injury/Trauma (opens the system roll dialog)
+- **Complex**: Skill rolls (opens the system dice roll dialog)
+- **Reaction**: Reaction-mode skill rolls (opens the system roll dialog)
+- **Insight**: Spend / Refresh (opens the system roll dialog)
+- **Weapons**: Lists owned weapons by order on the actor sheet and rolls them via the system dialog
+- **Spells**: Lists owned spells by order on the actor sheet and rolls them via the system dialog
 
-## Method 2
-1. On Foundry VTT's **Configuration and Setup** screen, go to **Add-on Modules**
-2. Click **Install Module**
-3. In the Manifest URL field, paste: `https://github.com/Larkinabout/fvtt-token-action-hud-template/releases/latest/download/module.json`
-4. Click **Install** next to the pasted Manifest URL
+## Installation
 
-## Required Modules
+### Manifest URL
 
-**IMPORTANT** - Token Action HUD Template requires the [Token Action HUD Core](https://foundryvtt.com/packages/token-action-hud-core) module to be installed.
+- `https://github.com/fresnoth/fvtt-token-action-hud-arkham-horror/releases/latest/download/module.json`
 
-## Recommended Modules
-Token Action HUD uses the [Color Picker](https://foundryvtt.com/packages/color-picker) library module for its color picker settings.
+### Steps
 
-# Support
+1. In Foundry, go to **Add-on Modules** → **Install Module**.
+2. Paste the manifest URL.
+3. Install.
+4. Enable **Token Action HUD Core** and **Token Action HUD Arkham Horror RPG** in your world.
 
-For a guide on using Token Action HUD, go to: [How to Use Token Action HUD](https://github.com/Larkinabout/fvtt-token-action-hud-core/wiki/How-to-Use-Token-Action-HUD)
+## Development
 
-For questions, feature requests or bug reports, please open an issue [here](https://github.com/Larkinabout/fvtt-token-action-hud-core/issues).
+- Install deps: `npm ci`
+- Build minified bundle: `npm run build`
+- Watch mode: `npm run dev`
 
-Pull requests are welcome. Please include a reason for the request or create an issue before starting one.
+Output bundle: `scripts/fvtt-token-action-hud-arkham-horror.min.js`
 
-# Acknowledgements
-
-Thank you to the Community Helpers on Foundry's Discord who provide tireless support for people seeking help with the HUD.
-
-# License
+## License
 
 This Foundry VTT module is licensed under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/) and this work is licensed under [Foundry Virtual Tabletop EULA - Limited License Agreement for module development](https://foundryvtt.com/article/license/).

@@ -15,27 +15,62 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
     DEFAULTS = {
         layout: [
             {
-                nestId: 'inventory',
-                id: 'inventory',
-                name: coreModule.api.Utils.i18n('Template.Inventory'),
+                nestId: 'dicepool',
+                id: 'dicepool',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Dicepool'),
                 groups: [
-                    { ...groups.weapons, nestId: 'inventory_weapons' },
-                    { ...groups.armor, nestId: 'inventory_armor' },
-                    { ...groups.equipment, nestId: 'inventory_equipment' },
-                    { ...groups.consumables, nestId: 'inventory_consumables' },
-                    { ...groups.containers, nestId: 'inventory_containers' },
-                    { ...groups.treasure, nestId: 'inventory_treasure' }
+                    { ...groups.dicepool_adjust, nestId: 'dicepool_adjust' },
+                    { ...groups.damage_adjust, nestId: 'dicepool_damage' },
+                    { ...groups.horror_adjust, nestId: 'dicepool_horror' },
+                    { ...groups.dicepool_actions, nestId: 'dicepool_actions' }
                 ]
             },
             {
-                nestId: 'utility',
-                id: 'utility',
-                name: coreModule.api.Utils.i18n('tokenActionHud.utility'),
+                nestId: 'complex',
+                id: 'complex',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.KNACK_SHEET.RollKind.Complex'),
                 groups: [
-                    { ...groups.combat, nestId: 'utility_combat' },
-                    { ...groups.token, nestId: 'utility_token' },
-                    { ...groups.rests, nestId: 'utility_rests' },
-                    { ...groups.utility, nestId: 'utility_utility' }
+                    { ...groups.complex_action, nestId: 'complex_skillaction' },
+                ]
+            },
+            {
+                nestId: 'reactions',
+                id: 'reactions',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.KNACK_SHEET.RollKind.Reaction'),
+                groups: [
+                    { ...groups.reactions, nestId: 'reactions_reactions' },
+                ]
+            },
+            {
+                nestId: 'insight',
+                id: 'insight',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Insight'),
+                groups: [
+                    { ...groups.insight, nestId: 'insight_actions' },
+                ]
+            },
+            {
+                nestId: 'injury_trauma',
+                id: 'injury_trauma',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.InjuriesTrauma'),
+                groups: [
+                    { ...groups.injury_trauma, nestId: 'injury_trauma_actions' },
+                ]
+            },
+            {
+                nestId: 'weapons',
+                id: 'weapons',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Weapons'),
+                groups: [
+                    { ...groups.weapons, nestId: 'weapons_list' },
+                ]
+            },
+            {
+                nestId: 'spells',
+                id: 'spells',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Spells'),
+                groups: [
+                    { ...groups.spells, nestId: 'spells_list' },
                 ]
             }
         ],

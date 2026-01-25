@@ -2,7 +2,7 @@
  * Module-based constants
  */
 export const MODULE = {
-    ID: 'token-action-hud-template'
+    ID: 'fvtt-token-action-hud-arkham-horror'
 }
 
 /**
@@ -15,39 +15,20 @@ export const CORE_MODULE = {
 /**
  * Core module version required by the system module
  */
-export const REQUIRED_CORE_MODULE_VERSION = '1.5'
-
-/**
- * Action types
- */
-export const ACTION_TYPE = {
-    item: 'tokenActionHud.template.item',
-    utility: 'tokenActionHud.utility'
-}
+export const REQUIRED_CORE_MODULE_VERSION = '2.0'
 
 /**
  * Groups
  */
 export const GROUP = {
-    armor: { id: 'armor', name: 'tokenActionHud.template.armor', type: 'system' },
-    equipment: { id: 'equipment', name: 'tokenActionHud.template.equipment', type: 'system' },
-    consumables: { id: 'consumables', name: 'tokenActionHud.template.consumables', type: 'system' },
-    containers: { id: 'containers', name: 'tokenActionHud.template.containers', type: 'system' },
-    treasure: { id: 'treasure', name: 'tokenActionHud.template.treasure', type: 'system' },
-    weapons: { id: 'weapons', name: 'tokenActionHud.template.weapons', type: 'system' },
-    combat: { id: 'combat', name: 'tokenActionHud.combat', type: 'system' },
-    token: { id: 'token', name: 'tokenActionHud.token', type: 'system' },
-    utility: { id: 'utility', name: 'tokenActionHud.utility', type: 'system' }
-}
-
-/**
- * Item types
- */
-export const ITEM_TYPE = {
-    armor: { groupId: 'armor' },
-    backpack: { groupId: 'containers' },
-    consumable: { groupId: 'consumables' },
-    equipment: { groupId: 'equipment' },
-    treasure: { groupId: 'treasure' },
-    weapon: { groupId: 'weapons' }
+    complex_action: { id: 'complex_action', name: 'ARKHAM_HORROR.LABELS.Skills', type: 'system' },
+    reactions: { id: 'reactions', name: 'ARKHAM_HORROR.KNACK_SHEET.RollKind.Reaction', type: 'system' },
+    insight: { id: 'insight', name: 'ARKHAM_HORROR.LABELS.Insight', type: 'system' },
+    injury_trauma: { id: 'injury_trauma', name: 'ARKHAM_HORROR.LABELS.InjuriesTrauma', type: 'system' },
+    weapons: { id: 'weapons', name: 'ARKHAM_HORROR.LABELS.Weapons', type: 'system' },
+    spells: { id: 'spells', name: 'ARKHAM_HORROR.LABELS.Spells', type: 'system' },
+    dicepool_adjust: { id: 'dicepool_adjust', name: 'ARKHAM_HORROR.ABBR.Dicepool', type: 'system' },
+    damage_adjust: { id: 'damage_adjust', name: 'ARKHAM_HORROR.LABELS.Damage', type: 'system' },
+    horror_adjust: { id: 'horror_adjust', name: 'ARKHAM_HORROR.LABELS.Horror', type: 'system' },
+    dicepool_actions: { id: 'dicepool_actions', name: 'ARKHAM_HORROR.LABELS.Dicepool', type: 'system' }
 }

@@ -1,19 +1,20 @@
 {
-  "id": "token-action-hud-template",
-  "title": "Token Action HUD Template",
+  "id": "fvtt-token-action-hud-arkham-horror",
+  "title": "Token Action HUD Arkham Horror RPG",
   "description": "Token Action HUD is a repositionable HUD of actions for a selected token",
   "authors": [
     {
-      "name": "Larkinabout",
-      "url": "https://github.com/Larkinabout"
+      "name": "fresnoth",
+      "discord": "fresnoth"
     }
   ],
-  "url": "This is auto replaced",
+  "url": "https://github.com/fresnoth/fvtt-token-action-hud-arkham-horror",
   "flags": {},
-  "version": "This is auto replaced",
+  "version": "13.0.0",
   "compatibility": {
-    "minimum": "11",
-    "verified": "11.313"
+    "minimum": "13",
+    "verified": "13.313",
+    "maximum": "13"
   },
   "esmodules": [
     "./scripts/init.js"
@@ -21,7 +22,6 @@
   "scripts": [
   ],
   "styles": [
-    "./styles/tah-template-style.css"
   ],
   "languages": [
     {
@@ -30,42 +30,29 @@
       "path": "languages/en.json"
     }
   ],
-  "packs": [],
   "relationships": {
     "systems": [
       {
-        "id": "template",
+        "id": "arkham-horror-rpg-fvtt",
         "type": "system",
-        "compatibility": [
-          {
-            "minimum": "1.0.0",
-            "verified": "1.0.0"
-          }
-        ]
+        "compatibility": {
+          "minimum": "0.0.0"
+        }
       }
     ],
     "requires": [
       {
         "id": "token-action-hud-core",
         "type": "module",
-        "compatibility": [
-          {
-            "minimum": "1.5.0",
-            "maximum": "1.5",
-            "verified": "1.5.0"
-          }
-        ]
+        "compatibility": {
+          "minimum": "2.0.0"
+        }
       }
     ],
-    "optional": [],
-    "flags": {
-      "optional": []
-    }
+    "recommends": []
   },
   "socket": false,
-  "manifest": "This is auto replaced",
-  "download": "This is auto replaced",
-  "readme": "https://github.com/Larkinabout/fvtt-token-action-hud-template#readme",
+  "readme": "https://github.com/fresnoth/fvtt-token-action-hud-arkham-horror#readme",
   "protected": false,
   "coreTranslation": false,
   "library": false
