@@ -12,7 +12,8 @@ env:
 
   # The URL to the module archive associated with the module release being
   # processed by this workflow.
-  release_module_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip"
+  # Note: this is also used for manual runs (workflow_dispatch) where the tag is provided as input.
+  release_module_url: "https://github.com/${{github.repository}}/releases/download/${{ github.event.release.tag_name || inputs.tag }}/module.zip"
 
 on: 
   # Only run this workflow when a release is published.
@@ -27,6 +28,13 @@ on:
   release:
     types: [published]
 
+  # Allow re-running packaging manually (useful if Actions were disabled when the release was published).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to package (e.g. v13.0.0)'
+        required: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,6 +44,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Determine Tag
+        id: tag
+        run: |
+          echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -105,10 +118,10 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          name: ${{ github.event.release.name }}
-          draft: ${{ github.event.release.unpublished }}
-          prerelease: ${{ github.event.release.prerelease }}
+          name: ${{ github.event.release.name || steps.tag.outputs.tag }}
+          draft: ${{ github.event.release.draft || false }}
+          prerelease: ${{ github.event.release.prerelease || false }}
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: './module.json, ./module.zip'
-          tag: ${{ github.event.release.tag_name }}
-          body: ${{ github.event.release.body }}
+          tag: ${{ steps.tag.outputs.tag }}
+          body: ${{ github.event.release.body || '' }}
