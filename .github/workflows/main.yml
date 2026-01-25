@@ -47,6 +47,21 @@ jobs:
 
       - name: Determine Tag
         id: tag
+            with:
+              # For manual runs, check out the tag being packaged.
+              # For release runs, check out the release tag.
+              ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+          - name: Determine Release Metadata
+            id: meta
+            shell: bash
+            run: |
+              TAG="${{ github.event.release.tag_name || inputs.tag }}"
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+              # Foundry expects a semver-ish version string; strip a leading 'v' if present.
+              VERSION="${TAG#v}"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         run: |
           echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> $GITHUB_OUTPUT
 
@@ -54,17 +69,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-
-      # Extract version embedded in the tag.
-      # This step expects the tag to be one of the following formats:
-      #   - "v<major>.<minor>.<patch>" (e.g., "v1.2.3")
-      #   - "<major>.<minor>.<patch>"  (e.g., "1.2.3")
-      #
-      # The version will be used by later steps to fill in the value for the
-      # "version" key required for a valid module manifest.
-      - name: Extract Version From Tag
-        id: get_version
         uses: battila7/get-version-action@v2
 
       - name: Install Dependencies
@@ -77,7 +81,7 @@ jobs:
       # This updates the manifest in-place in the action's filesystem only.
       - name: Modify Module Manifest With Release-Specific Values
         env:
-          VERSION: ${{ steps.get_version.outputs.version-without-v }}
+          VERSION: ${{ steps.meta.outputs.version }}
           URL: ${{ env.project_url }}
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
@@ -118,10 +122,10 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          name: ${{ github.event.release.name || steps.tag.outputs.tag }}
+          name: ${{ github.event.release.name || steps.meta.outputs.tag }}
           draft: ${{ github.event.release.draft || false }}
           prerelease: ${{ github.event.release.prerelease || false }}
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: './module.json, ./module.zip'
-          tag: ${{ steps.tag.outputs.tag }}
+          tag: ${{ steps.meta.outputs.tag }}
           body: ${{ github.event.release.body || '' }}
