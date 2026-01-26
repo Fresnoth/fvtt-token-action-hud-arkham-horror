@@ -4,6 +4,8 @@
 
 System module for [**Token Action HUD Core**](https://foundryvtt.com/packages/token-action-hud-core) that adds a fast action HUD for the [**Arkham Horror RPG (FVTT)**](https://github.com/MrTheBino/arkham-horror-rpg-fvtt) system.
 
+![Demo](.github/readme/token-action-hud-v1300-arkham-horror.gif)
+
 This is an **ALPHA** build focused on usability and stability. For planned work and deferred ideas, see [Future Features](futurefeatures.md).
 
 ## Requirements
