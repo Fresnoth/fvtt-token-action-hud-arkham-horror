@@ -1,5 +1,4 @@
 name: Create Module Files For GitHub Release
-name: Create Module Files For GitHub Release
 
 env:
   # The URL used for the module's "Project URL" link on FoundryVTT's website.
@@ -13,9 +12,6 @@ env:
   # The URL to the module archive associated with the module release being processed.
   # For manual runs, this uses the provided input tag.
   release_module_url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name || inputs.tag }}/module.zip"
-
-  # Minimum Arkham Horror RPG FVTT system version required for this module.
-  required_system_min_version: "13.0.32"
 
 on:
   release:
@@ -72,19 +68,16 @@ jobs:
           URL: ${{ env.project_url }}
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
-          SYSTEM_MIN: ${{ env.required_system_min_version }}
         run: |
           jq --arg VERSION "$VERSION" \
              --arg URL "$URL" \
              --arg MANIFEST "$MANIFEST" \
              --arg DOWNLOAD "$DOWNLOAD" \
-             --arg SYSTEM_MIN "$SYSTEM_MIN" \
              '.version=$VERSION
               | .url=$URL
               | .manifest=$MANIFEST
               | .download=$DOWNLOAD
-              | .esmodules=["./scripts/fvtt-token-action-hud-arkham-horror.min.js"]
-              | (.relationships.systems[] | select(.id=="arkham-horror-rpg-fvtt") | .compatibility.minimum)=$SYSTEM_MIN' \
+              | .esmodules=["./scripts/fvtt-token-action-hud-arkham-horror.min.js"]' \
              module.json > module.json.tmp
           mv module.json.tmp module.json
 
@@ -111,4 +104,3 @@ jobs:
           artifacts: "./module.json, ./module.zip"
           tag: ${{ steps.meta.outputs.tag }}
           body: ${{ github.event.release.body || '' }}
-          # Don't forget to add a backslash at the end of the line for any
