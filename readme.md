@@ -11,7 +11,7 @@ This is an **ALPHA** build focused on usability and stability. For planned work 
 ## Requirements
 
 - Foundry VTT: `v13`
-- Arkham Horror RPG System: `>= 13.0.32`
+- Arkham Horror RPG System: `>= 13.0.35`
 - Token Action HUD Core: `>= 2.0.0`
 
 ## What is available in ALPHA (current tabs)

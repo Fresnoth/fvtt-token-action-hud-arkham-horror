@@ -10,7 +10,7 @@
   ],
   "url": "https://github.com/fresnoth/fvtt-token-action-hud-arkham-horror",
   "flags": {},
-  "version": "13.0.0",
+  "version": "13.0.1",
   "compatibility": {
     "minimum": "13",
     "verified": "13.351",
@@ -36,7 +36,7 @@
         "id": "arkham-horror-rpg-fvtt",
         "type": "system",
         "compatibility": {
-          "minimum": "13.0.32"
+          "minimum": "13.0.35"
         }
       }
     ],

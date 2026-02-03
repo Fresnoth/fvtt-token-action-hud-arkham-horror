@@ -453,7 +453,8 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 if (actionId === 'injury_trauma') {
                     const InjuryTraumaRollApp = await _getInjuryTraumaRollApp()
                     if (!InjuryTraumaRollApp) return
-                    InjuryTraumaRollApp.getInstance({ actor, rollKind: 'injury', modifier: 0 }).render(true)
+                    // NEED TO REMOVE MODIFIER 0 because of change to this API in system 13.0.34
+                    InjuryTraumaRollApp.getInstance({ actor, rollKind: 'injury' }).render(true)
                     return
                 }
 
@@ -528,7 +529,6 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     InjuryTraumaRollApp.getInstance({
                         actor,
                         rollKind: 'injury',
-                        modifier: 0,
                         rollSource: 'strain'
                     }).render(true)
                 }
