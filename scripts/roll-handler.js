@@ -33,6 +33,21 @@ function _warnMissingApiOnce (compat, actionFamily, methodPath) {
     ui.notifications.warn(message)
 }
 
+function _notifySimpleSpendFailure (reason) {
+    const reasonMap = {
+        PERMISSION_DENIED: 'ARKHAM_HORROR.Warnings.PermissionRollActor',
+        INSUFFICIENT_HORROR: 'ARKHAM_HORROR.Warnings.SimpleActionInsufficientHorror',
+        INSUFFICIENT_REGULAR: 'ARKHAM_HORROR.Warnings.SimpleActionInsufficientRegular',
+        INSUFFICIENT_DICEPOOL: 'ARKHAM_HORROR.Warnings.SimpleActionInsufficientDicepool',
+        INSUFFICIENT_RESOURCE: 'ARKHAM_HORROR.Warnings.SimpleActionInsufficientDicepool',
+        AMOUNT_INVALID: 'ARKHAM_HORROR.Warnings.SimpleActionInvalidAmount',
+        HORROR_EXCEEDS_TOTAL: 'ARKHAM_HORROR.Warnings.SimpleActionInvalidHorrorSplit'
+    }
+
+    const key = reasonMap[String(reason ?? '')] ?? 'ARKHAM_HORROR.Warnings.SimpleActionSpendFailed'
+    ui.notifications.warn(game.i18n.localize(key))
+}
+
 async function _getDiceRollApp () {
     if (_DiceRollApp) return _DiceRollApp
 
@@ -341,13 +356,18 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 const dieType = actionId === 'spend_horror' ? 'horror' : actionId === 'spend_regular' ? 'regular' : null
                 if (!dieType) return
 
-                await compat.apiRoot.resources.spendSimpleActionDie(actor, {
+                const outcome = await compat.apiRoot.resources.spendSimpleActionDie(actor, {
                     dieType,
                     context: 'simple',
                     source: 'token-action-hud'
                 })
+
+                if (!outcome?.ok) {
+                    _notifySimpleSpendFailure(outcome?.reason)
+                }
             } catch (err) {
                 console.error('TAH Arkham Horror: error handling simple action', { actionId, actorId: actor?.id }, err)
+                _notifySimpleSpendFailure('UNHANDLED_ERROR')
             }
         }
 
@@ -599,11 +619,15 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                             return
                         }
 
-                        await compat.apiRoot.resources.discardDice(actor, {
+                        const outcome = await compat.apiRoot.resources.discardDice(actor, {
                             amount: 1,
                             context: 'discard',
                             source: 'token-action-hud'
                         })
+
+                        if (!outcome?.ok) {
+                            _notifySimpleSpendFailure(outcome?.reason)
+                        }
                         return
                     }
 
@@ -613,10 +637,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                             return
                         }
 
-                        await compat.apiRoot.resources.discardAllDice(actor, {
+                        const outcome = await compat.apiRoot.resources.discardAllDice(actor, {
                             context: 'discard',
                             source: 'token-action-hud'
                         })
+
+                        if (!outcome?.ok) {
+                            _notifySimpleSpendFailure(outcome?.reason)
+                        }
                         return
                     }
 
