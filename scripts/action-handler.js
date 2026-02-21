@@ -1,3 +1,5 @@
+import { getSystemCompat } from './system-compat.js'
+
 export let ActionHandler = null
 
 Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
@@ -34,6 +36,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             this.actors = [actor]
             this.actorType = actor?.type
+            this.systemCompat = getSystemCompat()
 
             await this.#buildCharacterActions(groupIds)
         }
@@ -43,6 +46,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          * @private
          */
         async #buildCharacterActions (groupIds) {
+            await this.#buildSimple(groupIds)
             await this.#buildSkills(groupIds)
             await this.#buildReactions(groupIds)
             await this.#buildDicePool(groupIds)
@@ -50,6 +54,36 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             await this.#buildInjuryTrauma(groupIds)
             await this.#buildWeapons(groupIds)
             await this.#buildSpells(groupIds)
+        }
+
+        /**
+         * Build simple-resource actions (Arkham API mode)
+         * @private
+         */
+        async #buildSimple (groupIds) {
+            const groupId = 'simple'
+            if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
+            if (!this.actor) return
+
+            const compat = this.systemCompat
+            if (!compat?.apiMode || !compat?.resources?.spendSimpleActionDie) return
+
+            const actions = [
+                {
+                    id: 'simple_spend_regular',
+                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.SpendRegularDie'),
+                    encodedValue: ['simple', 'spend_regular'].join(this.delimiter),
+                    system: { actionTypeId: 'simple', actionId: 'spend_regular' }
+                },
+                {
+                    id: 'simple_spend_horror',
+                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.SpendHorrorDie'),
+                    encodedValue: ['simple', 'spend_horror'].join(this.delimiter),
+                    system: { actionTypeId: 'simple', actionId: 'spend_horror' }
+                }
+            ]
+
+            await this.addActions(actions, { id: groupId, type: 'system' })
         }
 
         /**
@@ -83,6 +117,8 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         async #buildWeapons (groupIds) {
+            if (this.systemCompat?.apiMode && !this.systemCompat?.rolls?.openWeaponDialog) return
+
             const groupId = 'weapons'
             if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
 
@@ -103,6 +139,8 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         async #buildSpells (groupIds) {
+            if (this.systemCompat?.apiMode && !this.systemCompat?.rolls?.openSpellDialog) return
+
             const groupId = 'spells'
             if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
 
@@ -138,20 +176,30 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const insight = this.actor.system?.insight
             if (!insight) return
 
+            const compat = this.systemCompat
+            const canSpend = !compat?.apiMode || compat?.insight?.openSpendDialog
+            const canRefresh = !compat?.apiMode || compat?.insight?.refreshAndPost
+
             const actions = [
-                {
-                    id: 'insight_spend',
-                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.SpendInsight'),
-                    encodedValue: ['insight', 'spend'].join(this.delimiter),
-                    system: { actionTypeId: 'insight', actionId: 'spend' }
-                },
-                {
-                    id: 'insight_refresh',
-                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.RefreshInsight'),
-                    encodedValue: ['insight', 'refresh'].join(this.delimiter),
-                    system: { actionTypeId: 'insight', actionId: 'refresh' }
-                }
+                ...(canSpend
+                    ? [{
+                        id: 'insight_spend',
+                        name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.SpendInsight'),
+                        encodedValue: ['insight', 'spend'].join(this.delimiter),
+                        system: { actionTypeId: 'insight', actionId: 'spend' }
+                    }]
+                    : []),
+                ...(canRefresh
+                    ? [{
+                        id: 'insight_refresh',
+                        name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.RefreshInsight'),
+                        encodedValue: ['insight', 'refresh'].join(this.delimiter),
+                        system: { actionTypeId: 'insight', actionId: 'refresh' }
+                    }]
+                    : [])
             ]
+
+            if (actions.length === 0) return
 
             await this.addActions(actions, { id: groupId, type: 'system' })
         }
@@ -162,6 +210,8 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          */
         async #buildSkills (groupIds) {
             if (!this.actor) return
+
+            if (this.systemCompat?.apiMode && !this.systemCompat?.rolls?.openSkillDialog) return
 
             // Only build the group if it's requested, or if groupIds is not provided.
             const groupId = 'complex_action'
@@ -196,6 +246,8 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         async #buildReactions (groupIds) {
             if (!this.actor) return
 
+            if (this.systemCompat?.apiMode && !this.systemCompat?.rolls?.openReactionDialog) return
+
             const groupId = 'reactions'
             if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
 
@@ -229,6 +281,9 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         async #buildDicePool (groupIds) {
             if (!this.actor) return
 
+            const compat = this.systemCompat
+            const apiMode = compat?.apiMode === true
+
             const adjustGroupId = 'dicepool_adjust'
             const damageGroupId = 'damage_adjust'
             const horrorGroupId = 'horror_adjust'
@@ -244,6 +299,15 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const damage = Number(this.actor.system?.damage ?? 0)
             const effectiveMax = Math.max(0, baseMax - damage)
             const valueText = `${currentValue}/${effectiveMax}`
+
+            const canAdjustValue = !apiMode || compat?.dicepool?.adjustValue
+            const canAdjustDamage = !apiMode || compat?.dicepool?.adjustDamage
+            const canAdjustHorror = !apiMode || compat?.dicepool?.adjustHorror
+            const canRefresh = !apiMode || compat?.dicepool?.refresh
+            const canDiscard = !apiMode || compat?.resources?.discardDice
+            const canDiscardAll = !apiMode || compat?.resources?.discardAllDice
+            const canStrain = !apiMode || compat?.dicepool?.strain
+            const canInjuryTrauma = !apiMode || compat?.rolls?.openInjuryTraumaDialog || compat?.rolls?.openInjuryDialog
 
             const adjustActions = []
             const damageActions = []
@@ -298,34 +362,37 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 makeAdjustAction('inc', '+1')
             }
 
-            // Dicepool number manipulation (clamped in RollHandler).
-            makeDeltaAction('dec', '-1')
+            if (canAdjustValue) {
+                // Dicepool number manipulation is handled by system API in apiMode.
+                makeDeltaAction('dec', '-1')
 
-            // Display-only status button.
-            adjustActions.push({
-                id: 'dicepool_status',
-                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ABBR.Dicepool'),
-                encodedValue: ['dicepool', 'status'].join(this.delimiter),
-                system: { actionTypeId: 'dicepool', actionId: 'status' },
-                cssClass: 'disabled shrink',
-                info1: { text: valueText }
-            })
+                // Display-only status button.
+                adjustActions.push({
+                    id: 'dicepool_status',
+                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ABBR.Dicepool'),
+                    encodedValue: ['dicepool', 'status'].join(this.delimiter),
+                    system: { actionTypeId: 'dicepool', actionId: 'status' },
+                    cssClass: 'disabled shrink',
+                    info1: { text: valueText }
+                })
 
-            makeDeltaAction('inc', '+1')
+                makeDeltaAction('inc', '+1')
+            }
 
             // Damage/Horror adjustment groups
             const currentDamage = Number(this.actor.system?.damage ?? 0)
             const currentHorror = Number(this.actor.system?.horror ?? 0)
 
-            makeAdjustSet(damageActions, 'damage', currentDamage)
-            makeAdjustSet(horrorActions, 'horror', currentHorror)
+            if (canAdjustDamage) makeAdjustSet(damageActions, 'damage', currentDamage)
+            if (canAdjustHorror) makeAdjustSet(horrorActions, 'horror', currentHorror)
 
-            makeAction('refresh', 'ARKHAM_HORROR.ACTIONS.RefreshDicePool')
-            makeAction('clear', 'ARKHAM_HORROR.ACTIONS.ClearDicePool')
+            if (canRefresh) makeAction('refresh', 'ARKHAM_HORROR.ACTIONS.RefreshDicePool')
+            if (canDiscard) makeAction('discard', 'ARKHAM_HORROR.ACTIONS.DiscardDie')
+            if (canDiscardAll) makeAction('discard_all', 'ARKHAM_HORROR.ACTIONS.DiscardAllDice')
 
             // Safety net: keep these accessible under Dicepool even if the Injury/Trauma tab is not rendered for any reason.
-            makeAction('injury_trauma', 'ARKHAM_HORROR.ACTIONS.RollInjuryTrauma')
-            makeAction('strain', 'ARKHAM_HORROR.ACTIONS.StrainOneself')
+            if (canInjuryTrauma) makeAction('injury_trauma', 'ARKHAM_HORROR.ACTIONS.RollInjuryTrauma')
+            if (canStrain) makeAction('strain', 'ARKHAM_HORROR.ACTIONS.StrainOneself')
 
             if (adjustActions.length > 0) {
                 await this.addActions(adjustActions, { id: adjustGroupId, type: 'system' })

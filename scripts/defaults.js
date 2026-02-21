@@ -26,6 +26,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 ]
             },
             {
+                nestId: 'simple',
+                id: 'simple',
+                name: 'Simple',
+                groups: [
+                    { ...groups.simple, nestId: 'simple_actions' }
+                ]
+            },
+            {
                 nestId: 'complex',
                 id: 'complex',
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.KNACK_SHEET.RollKind.Complex'),

@@ -14,9 +14,26 @@ This is an **ALPHA** build focused on usability and stability. For planned work 
 - Arkham Horror RPG System: `>= 13.0.35`
 - Token Action HUD Core: `>= 2.0.0`
 
+## Compatibility Mode v13.0.3
+
+- `Arkham < 13.0.37`: legacy compatibility mode (existing dynamic-import routing).
+- `Arkham >= 13.0.37`: API mode (routes through `game.arkhamhorrorrpgfvtt.api`).
+
+API mode details:
+
+- No legacy fallback if a required API method is missing in API mode.
+- Missing methods fail closed (action is skipped and a warning is shown).
+- Dicepool actions use system API methods instead of direct actor data writes.
+
+Upgrade note:
+
+- If you are on module `v13.0.2` and upgrade Arkham to `>= 13.0.37`, dicepool increment/decrement actions will not update correctly due to a system API breaking change.
+- Upgrade this module to `v13.0.3` (or newer) when upgrading the base Arkham system.
+
 ## What is available in ALPHA (current tabs)
 
-- **Dicepool**: DP +/-, Damage/Horror +/- , Refresh, Clear, Strain, Injury/Trauma (opens the system roll dialog)
+- **Dicepool**: DP +/-, Damage/Horror +/-, Refresh, Discard Die, Discard All Dice, Strain, Injury/Trauma
+- **Simple**: Spend Regular Die / Spend Horror Die (API mode)
 - **Complex**: Skill rolls (opens the system dice roll dialog)
 - **Reaction**: Reaction-mode skill rolls (opens the system roll dialog)
 - **Insight**: Spend / Refresh (opens the system roll dialog)
@@ -41,6 +58,10 @@ This is an **ALPHA** build focused on usability and stability. For planned work 
 - Install deps: `npm ci`
 - Build minified bundle: `npm run build`
 - Watch mode: `npm run dev`
+
+### Smoke Testing
+
+- Run the Foundry smoke checklist in `SMOKE-TEST.md` after making action routing changes.
 
 Output bundle: `scripts/fvtt-token-action-hud-arkham-horror.min.js`
 

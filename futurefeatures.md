@@ -27,3 +27,9 @@ This file contains **only** the ideas/features that are **not implemented yet**.
 ## Equipment and Knacks
 
 - Consider adding other equipment, tomes, useful items, knacks etc to the HUD if/when the system allows for a "roll description/special rules" to chat function is implemented
+
+## Compatibility Hardening
+
+- Add capability-first routing hardening so mode selection does not rely only on a version threshold.
+  - Keep `ARKHAM_API_MIN_VERSION` as a hint, but determine API mode by required API family presence (`rolls`, `dicepool`, `insight`, `resources`).
+  - If version indicates API mode but required API families are missing, fall back to legacy mode with a one-time warning.

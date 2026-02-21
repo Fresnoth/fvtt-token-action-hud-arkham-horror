@@ -13,9 +13,15 @@ export const CORE_MODULE = {
 }
 
 /**
+ * Arkham Horror system version where public API routing is required.
+ */
+export const ARKHAM_API_MIN_VERSION = '13.0.37'
+
+/**
  * Groups
  */
 export const GROUP = {
+    simple: { id: 'simple', name: 'Simple', type: 'system' },
     complex_action: { id: 'complex_action', name: 'ARKHAM_HORROR.LABELS.Skills', type: 'system' },
     reactions: { id: 'reactions', name: 'ARKHAM_HORROR.KNACK_SHEET.RollKind.Reaction', type: 'system' },
     insight: { id: 'insight', name: 'ARKHAM_HORROR.LABELS.Insight', type: 'system' },

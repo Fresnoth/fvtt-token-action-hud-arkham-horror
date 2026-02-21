@@ -1,3 +1,5 @@
+import { getSystemCompat } from './system-compat.js'
+
 export let RollHandler = null
 
 let _DiceRollApp = null
@@ -7,6 +9,7 @@ let _refreshInsightAndPost = null
 
 let _refreshDicepoolAndPost = null
 let _InjuryTraumaRollApp = null
+const _missingApiWarnings = new Set()
 
 function _isDebugEnabled () {
     // Toggle in browser console with: globalThis.tahAhDebug = true
@@ -16,6 +19,18 @@ function _isDebugEnabled () {
 function _debug (...args) {
     if (!_isDebugEnabled()) return
     console.log('TAH Arkham Horror [debug]:', ...args)
+}
+
+function _warnMissingApiOnce (compat, actionFamily, methodPath) {
+    const key = `${actionFamily}:${methodPath}`
+    if (_missingApiWarnings.has(key)) return
+
+    _missingApiWarnings.add(key)
+    const version = compat?.systemVersion || 'unknown'
+    const message = `TAH Arkham Horror: ${actionFamily} requires ${methodPath} on Arkham API mode (system ${version}).`
+
+    console.warn(message)
+    ui.notifications.warn(message)
 }
 
 async function _getDiceRollApp () {
@@ -274,6 +289,9 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             case 'item':
                 this.#handleItemAction(event, actor, actionId)
                 break
+            case 'simple':
+                await this.#handleSimpleAction(event, actor, actionId)
+                break
             case 'skills':
                 await this.#handleSkillAction(event, actor, actionId)
                 break
@@ -300,6 +318,40 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         /**
+         * Handle simple-resource actions
+         * @private
+         * @param {object} event
+         * @param {object} actor
+         * @param {string} actionId One of: spend_regular | spend_horror
+         */
+        async #handleSimpleAction (event, actor, actionId) {
+            try {
+                event?.preventDefault?.()
+
+                if (!actor) return
+
+                const compat = getSystemCompat()
+                if (!compat.apiMode) return
+
+                if (!compat.resources.spendSimpleActionDie) {
+                    _warnMissingApiOnce(compat, 'simple', 'api.resources.spendSimpleActionDie')
+                    return
+                }
+
+                const dieType = actionId === 'spend_horror' ? 'horror' : actionId === 'spend_regular' ? 'regular' : null
+                if (!dieType) return
+
+                await compat.apiRoot.resources.spendSimpleActionDie(actor, {
+                    dieType,
+                    context: 'simple',
+                    source: 'token-action-hud'
+                })
+            } catch (err) {
+                console.error('TAH Arkham Horror: error handling simple action', { actionId, actorId: actor?.id }, err)
+            }
+        }
+
+        /**
          * Handle insight actions
          * @private
          * @param {object} event
@@ -321,10 +373,22 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
                 if (actor?.type !== 'character') return
 
+                const compat = getSystemCompat()
+
                 if (actionId === 'spend') {
                     const remaining = Number(actor.system?.insight?.remaining) || 0
                     if (remaining <= 0) {
                         ui.notifications.warn(game.i18n.format('ARKHAM_HORROR.INSIGHT.Errors.NoneRemaining', { actorName: actor.name }))
+                        return
+                    }
+
+                    if (compat.apiMode) {
+                        if (!compat.insight.openSpendDialog) {
+                            _warnMissingApiOnce(compat, 'insight', 'api.insight.openSpendDialog')
+                            return
+                        }
+
+                        await compat.apiRoot.insight.openSpendDialog(actor)
                         return
                     }
 
@@ -336,6 +400,16 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 }
 
                 if (actionId === 'refresh') {
+                    if (compat.apiMode) {
+                        if (!compat.insight.refreshAndPost) {
+                            _warnMissingApiOnce(compat, 'insight', 'api.insight.refreshAndPost')
+                            return
+                        }
+
+                        await compat.apiRoot.insight.refreshAndPost(actor, { source: 'token-action-hud' })
+                        return
+                    }
+
                     const refreshInsightAndPost = await _getRefreshInsightAndPost()
                     if (!refreshInsightAndPost) return
 
@@ -357,6 +431,17 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             try {
                 event?.preventDefault?.()
                 if (!actor) return
+
+                const compat = getSystemCompat()
+                if (compat.apiMode) {
+                    if (!compat.rolls.openWeaponDialog) {
+                        _warnMissingApiOnce(compat, 'weapon', 'api.rolls.openWeaponDialog')
+                        return
+                    }
+
+                    await compat.apiRoot.rolls.openWeaponDialog(actor, { itemId: actionId })
+                    return
+                }
 
                 const item = actor.items?.get?.(actionId)
                 if (!item) return
@@ -405,6 +490,17 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 event?.preventDefault?.()
                 if (!actor) return
 
+                const compat = getSystemCompat()
+                if (compat.apiMode) {
+                    if (!compat.rolls.openSpellDialog) {
+                        _warnMissingApiOnce(compat, 'spell', 'api.rolls.openSpellDialog')
+                        return
+                    }
+
+                    await compat.apiRoot.rolls.openSpellDialog(actor, { itemId: actionId })
+                    return
+                }
+
                 const item = actor.items?.get?.(actionId)
                 if (!item) return
 
@@ -438,7 +534,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          * @private
          * @param {object} event
          * @param {object} actor
-         * @param {string} actionId One of: refresh | clear | strain
+         * @param {string} actionId One of: refresh | discard | discard_all | strain
          */
         async #handleDicePoolAction (event, actor, actionId) {
             try {
@@ -447,6 +543,127 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 _debug('#handleDicePoolAction()', { actorId: actor?.id, actorName: actor?.name, actionId })
 
                 if (!actor) return
+
+                const compat = getSystemCompat()
+
+                if (compat.apiMode) {
+                    if (actionId === 'status' || actionId === 'damage_status' || actionId === 'horror_status') return
+
+                    if (actionId === 'injury_trauma') {
+                        const injuryDialog = compat.apiRoot?.rolls?.openInjuryTraumaDialog ?? compat.apiRoot?.rolls?.openInjuryDialog
+                        if (typeof injuryDialog !== 'function') {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.rolls.openInjuryTraumaDialog')
+                            return
+                        }
+
+                        await injuryDialog(actor, { rollKind: 'injury', modifier: 0 })
+                        return
+                    }
+
+                    if (actionId === 'damage_inc' || actionId === 'damage_dec') {
+                        if (!compat.dicepool.adjustDamage) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.adjustDamage')
+                            return
+                        }
+
+                        const delta = actionId === 'damage_inc' ? 1 : -1
+                        await compat.apiRoot.dicepool.adjustDamage(actor, { delta })
+                        return
+                    }
+
+                    if (actionId === 'horror_inc' || actionId === 'horror_dec') {
+                        if (!compat.dicepool.adjustHorror) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.adjustHorror')
+                            return
+                        }
+
+                        const delta = actionId === 'horror_inc' ? 1 : -1
+                        await compat.apiRoot.dicepool.adjustHorror(actor, { delta })
+                        return
+                    }
+
+                    if (actionId === 'inc' || actionId === 'dec') {
+                        if (!compat.dicepool.adjustValue) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.adjustValue')
+                            return
+                        }
+
+                        const delta = actionId === 'inc' ? 1 : -1
+                        await compat.apiRoot.dicepool.adjustValue(actor, { delta })
+                        return
+                    }
+
+                    if (actionId === 'discard') {
+                        if (!compat.resources.discardDice) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.resources.discardDice')
+                            return
+                        }
+
+                        await compat.apiRoot.resources.discardDice(actor, {
+                            amount: 1,
+                            context: 'discard',
+                            source: 'token-action-hud'
+                        })
+                        return
+                    }
+
+                    if (actionId === 'discard_all' || actionId === 'clear') {
+                        if (!compat.resources.discardAllDice) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.resources.discardAllDice')
+                            return
+                        }
+
+                        await compat.apiRoot.resources.discardAllDice(actor, {
+                            context: 'discard',
+                            source: 'token-action-hud'
+                        })
+                        return
+                    }
+
+                    if (actionId === 'refresh') {
+                        if (!compat.dicepool.refresh) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.refresh')
+                            return
+                        }
+
+                        await compat.apiRoot.dicepool.refresh(actor, {
+                            label: game.i18n.localize('ARKHAM_HORROR.DICEPOOL.Chat.Refresh'),
+                            healDamage: false
+                        })
+                        return
+                    }
+
+                    if (actionId === 'strain') {
+                        if (!actor?.isOwner) {
+                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.PermissionStrainActor'))
+                            return
+                        }
+
+                        const currentDamage = Number(actor.system?.damage ?? 0)
+                        if (currentDamage <= 0) {
+                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.StrainRequiresDamage'))
+                            return
+                        }
+
+                        if (!compat.dicepool.strain) {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.strain')
+                            return
+                        }
+
+                        await compat.apiRoot.dicepool.strain(actor, { source: 'token-action-hud' })
+
+                        const injuryDialog = compat.apiRoot?.rolls?.openInjuryTraumaDialog ?? compat.apiRoot?.rolls?.openInjuryDialog
+                        if (typeof injuryDialog === 'function') {
+                            await injuryDialog(actor, {
+                                rollKind: 'injury',
+                                modifier: 0,
+                                rollSource: 'strain'
+                            })
+                        }
+                    }
+
+                    return
+                }
 
                 if (actionId === 'status' || actionId === 'damage_status' || actionId === 'horror_status') return
 
@@ -488,7 +705,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     return
                 }
 
-                if (actionId === 'clear') {
+                if (actionId === 'discard') {
+                    const currentValue = Number(actor.system?.dicepool?.value ?? 0)
+                    const nextValue = Math.max(0, currentValue - 1)
+                    await actor.update({ 'system.dicepool.value': nextValue })
+                    return
+                }
+
+                if (actionId === 'discard_all' || actionId === 'clear') {
                     await actor.update({ 'system.dicepool.value': 0 })
                     return
                 }
@@ -550,6 +774,18 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
                 _debug('#handleReactionAction()', { actionId, actorId: actor?.id })
 
+                const compat = getSystemCompat()
+                if (compat.apiMode) {
+                    if (!compat.rolls.openReactionDialog) {
+                        _warnMissingApiOnce(compat, 'reaction', 'api.rolls.openReactionDialog')
+                        return
+                    }
+
+                    const rollKind = this.action?.system?.rollKind ?? 'reaction'
+                    await compat.apiRoot.rolls.openReactionDialog(actor, { skillKey: actionId, rollKind })
+                    return
+                }
+
                 const DiceRollApp = await _getDiceRollApp()
                 if (!DiceRollApp) {
                     return
@@ -594,6 +830,18 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         async #handleSkillAction (event, actor, actionId) {
             try {
                 event?.preventDefault?.()
+
+                const compat = getSystemCompat()
+                if (compat.apiMode) {
+                    if (!compat.rolls.openSkillDialog) {
+                        _warnMissingApiOnce(compat, 'skills', 'api.rolls.openSkillDialog')
+                        return
+                    }
+
+                    const rollKind = this.action?.system?.rollKind ?? 'complex'
+                    await compat.apiRoot.rolls.openSkillDialog(actor, { skillKey: actionId, rollKind })
+                    return
+                }
 
                 // If the system provides a dedicated skill roll API, prefer it.
                 if (actor && typeof actor.rollSkill === 'function') {
