@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.0.0 - 2026-07-31
+
+- Tested to allow compatibility with Foundry v14.359, Arkham Horror RPG 14.1.0.1 and Token Action HUD Core 2.1.1
+
 ## 13.0.3 - 2026-02-20
 
 ### ADVISORY
