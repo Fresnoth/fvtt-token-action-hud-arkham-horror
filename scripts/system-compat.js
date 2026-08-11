@@ -22,6 +22,7 @@ export function getSystemCompat () {
         rolls: {
             openSkillDialog: typeof apiRoot?.rolls?.openSkillDialog === 'function',
             openReactionDialog: typeof apiRoot?.rolls?.openReactionDialog === 'function',
+            openHealDialog: typeof apiRoot?.rolls?.openHealDialog === 'function',
             openWeaponDialog: typeof apiRoot?.rolls?.openWeaponDialog === 'function',
             openSpellDialog: typeof apiRoot?.rolls?.openSpellDialog === 'function',
             openInjuryTraumaDialog: typeof apiRoot?.rolls?.openInjuryTraumaDialog === 'function',
@@ -44,7 +45,9 @@ export function getSystemCompat () {
         resources: {
             spendSimpleActionDie: typeof apiRoot?.resources?.spendSimpleActionDie === 'function',
             discardDice: typeof apiRoot?.resources?.discardDice === 'function',
-            discardAllDice: typeof apiRoot?.resources?.discardAllDice === 'function'
+            discardAllDice: typeof apiRoot?.resources?.discardAllDice === 'function',
+            strain: typeof apiRoot?.resources?.strain === 'function',
+            canStrain: typeof apiRoot?.resources?.canStrain === 'function'
         }
     }
 }

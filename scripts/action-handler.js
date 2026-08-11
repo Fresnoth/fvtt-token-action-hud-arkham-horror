@@ -51,9 +51,19 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             await this.#buildReactions(groupIds)
             await this.#buildDicePool(groupIds)
             await this.#buildInsight(groupIds)
+            await this.#buildHealing(groupIds)
             await this.#buildInjuryTrauma(groupIds)
             await this.#buildWeapons(groupIds)
             await this.#buildSpells(groupIds)
+        }
+
+        #canStrainActor () {
+            const compat = this.systemCompat
+            if (!compat?.apiMode) return true
+            if (!compat?.resources?.strain && !compat?.dicepool?.strain) return false
+            if (!compat?.resources?.canStrain) return true
+
+            return compat.apiRoot.resources.canStrain(this.actor)?.ok === true
         }
 
         /**
@@ -94,24 +104,34 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             if (!this.actor) return
 
             const groupId = 'injury_trauma'
+            if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
 
             // Only show if the actor has a dice pool (strain depends on it).
             if (!this.actor.system?.dicepool) return
 
-            const actions = [
-                {
+            const compat = this.systemCompat
+            const apiMode = compat?.apiMode === true
+            const actions = []
+
+            if (!apiMode || compat?.rolls?.openInjuryTraumaDialog || compat?.rolls?.openInjuryDialog) {
+                actions.push({
                     id: 'injury_trauma_roll',
                     name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.RollInjuryTrauma'),
                     encodedValue: ['dicepool', 'injury_trauma'].join(this.delimiter),
                     system: { actionTypeId: 'dicepool', actionId: 'injury_trauma' }
-                },
-                {
+                })
+            }
+
+            if (this.#canStrainActor()) {
+                actions.push({
                     id: 'injury_trauma_strain',
                     name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.StrainOneself'),
                     encodedValue: ['dicepool', 'strain'].join(this.delimiter),
                     system: { actionTypeId: 'dicepool', actionId: 'strain' }
-                }
-            ]
+                })
+            }
+
+            if (actions.length === 0) return
 
             await this.addActions(actions, { id: groupId, type: 'system' })
         }
@@ -200,6 +220,28 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             ]
 
             if (actions.length === 0) return
+
+            await this.addActions(actions, { id: groupId, type: 'system' })
+        }
+
+        /**
+         * Build healing roll actions
+         * @private
+         */
+        async #buildHealing (groupIds) {
+            if (!this.actor || this.actor.type !== 'character') return
+            if (!this.systemCompat?.rolls?.openHealDialog) return
+
+            const groupId = 'healing'
+            if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
+
+            const actions = ['heal-damage', 'heal-injury', 'introspection', 'counseling']
+                .map(rollKind => ({
+                    id: `healing_${rollKind}`,
+                    name: coreModule.api.Utils.i18n(`ARKHAM_HORROR.HEALING.RollKind.${rollKind}`),
+                    encodedValue: ['healing', rollKind].join(this.delimiter),
+                    system: { actionTypeId: 'healing', actionId: rollKind }
+                }))
 
             await this.addActions(actions, { id: groupId, type: 'system' })
         }
@@ -306,7 +348,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const canRefresh = !apiMode || compat?.dicepool?.refresh
             const canDiscard = !apiMode || compat?.resources?.discardDice
             const canDiscardAll = !apiMode || compat?.resources?.discardAllDice
-            const canStrain = !apiMode || compat?.dicepool?.strain
+            const canStrain = this.#canStrainActor()
             const canInjuryTrauma = !apiMode || compat?.rolls?.openInjuryTraumaDialog || compat?.rolls?.openInjuryDialog
 
             const adjustActions = []

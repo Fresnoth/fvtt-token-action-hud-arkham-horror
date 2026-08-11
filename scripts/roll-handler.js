@@ -316,6 +316,9 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             case 'insight':
                 await this.#handleInsightAction(event, actor, actionId)
                 break
+            case 'healing':
+                await this.#handleHealingAction(event, actor, actionId)
+                break
             case 'weapon':
                 await this.#handleWeaponAction(event, actor, actionId)
                 break
@@ -437,6 +440,30 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 }
             } catch (err) {
                 console.error('TAH Arkham Horror: error handling insight action', { actionId, actorId: actor?.id }, err)
+            }
+        }
+
+        /**
+         * Handle healing roll actions
+         * @private
+         * @param {object} event
+         * @param {object} actor
+         * @param {string} actionId The healing roll kind
+         */
+        async #handleHealingAction (event, actor, actionId) {
+            try {
+                event?.preventDefault?.()
+                if (!actor) return
+
+                const compat = getSystemCompat()
+                if (!compat.rolls.openHealDialog) {
+                    _warnMissingApiOnce(compat, 'healing', 'api.rolls.openHealDialog')
+                    return
+                }
+
+                await compat.apiRoot.rolls.openHealDialog(actor, { rollKind: actionId })
+            } catch (err) {
+                console.error('TAH Arkham Horror: error handling healing action', { actorId: actor?.id, rollKind: actionId }, err)
             }
         }
 
@@ -662,32 +689,13 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     }
 
                     if (actionId === 'strain') {
-                        if (!actor?.isOwner) {
-                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.PermissionStrainActor'))
+                        const strain = compat.apiRoot?.resources?.strain ?? compat.apiRoot?.dicepool?.strain
+                        if (typeof strain !== 'function') {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.resources.strain')
                             return
                         }
 
-                        const currentDamage = Number(actor.system?.damage ?? 0)
-                        if (currentDamage <= 0) {
-                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.StrainRequiresDamage'))
-                            return
-                        }
-
-                        if (!compat.dicepool.strain) {
-                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.strain')
-                            return
-                        }
-
-                        await compat.apiRoot.dicepool.strain(actor, { source: 'token-action-hud' })
-
-                        const injuryDialog = compat.apiRoot?.rolls?.openInjuryTraumaDialog ?? compat.apiRoot?.rolls?.openInjuryDialog
-                        if (typeof injuryDialog === 'function') {
-                            await injuryDialog(actor, {
-                                rollKind: 'injury',
-                                modifier: 0,
-                                rollSource: 'strain'
-                            })
-                        }
+                        await strain(actor, { source: 'token-action-hud' })
                     }
 
                     return

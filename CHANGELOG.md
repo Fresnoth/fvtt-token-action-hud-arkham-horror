@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added a Healing group for Arkham Horror RPG 14.2.0 with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
+
+### Changed
+
+- Strain eligibility now follows `api.resources.canStrain`, including Major NPC restrictions and once-only use.
+- Straining now delegates the full workflow to `api.resources.strain`, avoiding duplicate injury dialogs and preserving the system's confirmation, chat, and permission behavior.
+
 ## 14.0.0 - 2026-07-31
 
 - Tested to allow compatibility with Foundry v14.359, Arkham Horror RPG 14.1.0.1 and Token Action HUD Core 2.1.1

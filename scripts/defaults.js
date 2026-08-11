@@ -58,6 +58,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 ]
             },
             {
+                nestId: 'healing',
+                id: 'healing',
+                name: coreModule.api.Utils.i18n('ARKHAM_HORROR.HEALING.SectionTitle'),
+                groups: [
+                    { ...groups.healing, nestId: 'healing_actions' },
+                ]
+            },
+            {
                 nestId: 'injury_trauma',
                 id: 'injury_trauma',
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.InjuriesTrauma'),
