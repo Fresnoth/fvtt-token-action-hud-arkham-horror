@@ -225,23 +225,36 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         /**
-         * Build healing roll actions
+         * Build healing and recovery actions
          * @private
          */
         async #buildHealing (groupIds) {
-            if (!this.actor || this.actor.type !== 'character') return
-            if (!this.systemCompat?.rolls?.openHealDialog) return
+            if (!this.actor || this.actor.type === 'vehicle') return
+
+            const canRollHealing = this.actor.type === 'character' && this.systemCompat?.rolls?.openHealDialog
+            const canRecover = game.user?.isGM && this.systemCompat?.resources?.openRecoveryDialog
+            if (!canRollHealing && !canRecover) return
 
             const groupId = 'healing'
             if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
 
-            const actions = ['heal-damage', 'heal-injury', 'introspection', 'counseling']
-                .map(rollKind => ({
+            const actions = canRollHealing
+                ? ['heal-damage', 'heal-injury', 'introspection', 'counseling'].map(rollKind => ({
                     id: `healing_${rollKind}`,
                     name: coreModule.api.Utils.i18n(`ARKHAM_HORROR.HEALING.RollKind.${rollKind}`),
                     encodedValue: ['healing', rollKind].join(this.delimiter),
                     system: { actionTypeId: 'healing', actionId: rollKind }
                 }))
+                : []
+
+            if (canRecover) {
+                actions.push({
+                    id: 'recovery_open',
+                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.HEALING.Recovery.MenuLabel'),
+                    encodedValue: ['recovery', 'open'].join(this.delimiter),
+                    system: { actionTypeId: 'recovery', actionId: 'open' }
+                })
+            }
 
             await this.addActions(actions, { id: groupId, type: 'system' })
         }

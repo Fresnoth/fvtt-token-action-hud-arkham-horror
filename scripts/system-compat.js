@@ -47,7 +47,8 @@ export function getSystemCompat () {
             discardDice: typeof apiRoot?.resources?.discardDice === 'function',
             discardAllDice: typeof apiRoot?.resources?.discardAllDice === 'function',
             strain: typeof apiRoot?.resources?.strain === 'function',
-            canStrain: typeof apiRoot?.resources?.canStrain === 'function'
+            canStrain: typeof apiRoot?.resources?.canStrain === 'function',
+            openRecoveryDialog: typeof apiRoot?.resources?.openRecoveryDialog === 'function'
         }
     }
 }

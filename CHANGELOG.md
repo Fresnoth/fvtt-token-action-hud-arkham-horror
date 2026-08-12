@@ -5,9 +5,11 @@
 ### Added
 
 - Added a Healing group for Arkham Horror RPG 14.2.0 with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
+- Added the Arkham Horror RPG 14.2.0 Recovery dialog to the Healing group for GMs on character and NPC actors through `api.resources.openRecoveryDialog`.
 
 ### Changed
 
+- Recovery is hidden from players and checked again at dispatch time so Token Action HUD matches the system sheet's GM-only workflow.
 - Strain eligibility now follows `api.resources.canStrain`, including Major NPC restrictions and once-only use.
 - Straining now delegates the full workflow to `api.resources.strain`, avoiding duplicate injury dialogs and preserving the system's confirmation, chat, and permission behavior.
 

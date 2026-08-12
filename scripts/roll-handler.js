@@ -319,6 +319,9 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             case 'healing':
                 await this.#handleHealingAction(event, actor, actionId)
                 break
+            case 'recovery':
+                await this.#handleRecoveryAction(event, actor, actionId)
+                break
             case 'weapon':
                 await this.#handleWeaponAction(event, actor, actionId)
                 break
@@ -464,6 +467,35 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 await compat.apiRoot.rolls.openHealDialog(actor, { rollKind: actionId })
             } catch (err) {
                 console.error('TAH Arkham Horror: error handling healing action', { actorId: actor?.id, rollKind: actionId }, err)
+            }
+        }
+
+        /**
+         * Handle the GM recovery tool
+         * @private
+         * @param {object} event
+         * @param {object} actor
+         * @param {string} actionId
+         */
+        async #handleRecoveryAction (event, actor, actionId) {
+            try {
+                event?.preventDefault?.()
+                if (!actor || actor.type === 'vehicle' || actionId !== 'open') return
+
+                if (!game.user?.isGM) {
+                    ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.HEALING.Reasons.PERMISSION_DENIED'))
+                    return
+                }
+
+                const compat = getSystemCompat()
+                if (!compat.resources.openRecoveryDialog) {
+                    _warnMissingApiOnce(compat, 'recovery', 'api.resources.openRecoveryDialog')
+                    return
+                }
+
+                await compat.apiRoot.resources.openRecoveryDialog(actor, { source: 'token-action-hud' })
+            } catch (err) {
+                console.error('TAH Arkham Horror: error handling recovery action', { actorId: actor?.id }, err)
             }
         }
 
