@@ -10,6 +10,8 @@
 - Added an Injury & Trauma category with the Roll Injury/Trauma workflow and current Injury and Trauma item references.
 - Added Melee Combat, Ranged Combat, and Other subgroups under Weapons.
 - Added non-rolling Useful Item, Relic, Tome, and Favor references that open their item sheets.
+- Added Protective Equipment as the first Items subgroup with non-rolling item references.
+- Added a Knacks category with Knacks, Tier 1 through Tier 4, and NPC-only Weaknesses non-rolling item references.
 - Added optional item image tags and rich, bounded tooltips for weapons, spells, Useful Items, Relics, Tomes, and Favors.
 
 ### Changed

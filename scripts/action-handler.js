@@ -118,6 +118,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             await this.#buildWeapons(groupIds)
             await this.#buildReferenceItems(groupIds)
             await this.#buildSpells(groupIds)
+            await this.#buildKnacks(groupIds)
         }
 
         #canStrainActor () {
@@ -315,13 +316,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         async #buildReferenceItems (groupIds) {
-            const itemGroupIds = ['useful_items', 'relics', 'tomes', 'favors']
+            const itemGroupIds = ['protective_equipment', 'useful_items', 'relics', 'tomes', 'favors']
             const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
             if (requestedGroupIds && !itemGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
             if (!this.actor) return
 
             const items = this.actor.items?.contents ?? []
             const itemsByGroup = {
+                protective_equipment: items.filter(item => item?.type === 'protective_equipment'),
                 useful_items: items.filter(item => item?.type === 'useful_item'),
                 relics: items.filter(item => item?.type === 'relic'),
                 tomes: items.filter(item => item?.type === 'tome'),
@@ -341,20 +343,26 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 ]
                 const fields = ['system.description']
 
-                if (item.type === 'useful_item' && item.system?.hasSpecialRules !== false) {
+                if (item.type === 'protective_equipment') {
+                    properties.push({ label: localize('ITEM.ProtectiveEquipment.cost'), value: item.system?.cost })
+                    fields.push(
+                        { key: 'system.defensiveBenefit', labelKey: 'ITEM.ProtectiveEquipment.defensiveBenefit' },
+                        { key: 'system.specialRules', labelKey: 'ITEM.ProtectiveEquipment.specialRules' }
+                    )
+                } else if (item.type === 'useful_item' && item.system?.hasSpecialRules !== false) {
                     fields.push({ key: 'system.specialRules', labelKey: 'ARKHAM_HORROR.PROPS.SpecialRules' })
                 } else if (item.type === 'tome') {
                     properties.push(
-                        { label: localize('ARKHAM_HORROR.ITEM.Tome.understood'), value: item.system?.understood ? localize('Yes', 'Yes') : localize('No', 'No') },
-                        { label: localize('ARKHAM_HORROR.ITEM.Tome.attuned'), value: item.system?.attuned ? localize('Yes', 'Yes') : localize('No', 'No') },
-                        { label: localize('ARKHAM_HORROR.ITEM.Tome.attunementDifficulty'), value: item.system?.attunementDifficulty }
+                        { label: localize('ITEM.Tome.understood'), value: item.system?.understood ? localize('Yes', 'Yes') : localize('No', 'No') },
+                        { label: localize('ITEM.Tome.attuned'), value: item.system?.attuned ? localize('Yes', 'Yes') : localize('No', 'No') },
+                        { label: localize('ITEM.Tome.attunementDifficulty'), value: item.system?.attunementDifficulty }
                     )
                 } else if (item.type === 'favor') {
-                    properties.push({ label: localize('ARKHAM_HORROR.ITEM.Favor.xp'), value: item.system?.xp })
+                    properties.push({ label: localize('ITEM.Favor.xp'), value: item.system?.xp })
                     fields.push(
-                        { key: 'system.benefit', labelKey: 'ARKHAM_HORROR.ITEM.Favor.benefit' },
-                        { key: 'system.decliningText', labelKey: 'ARKHAM_HORROR.ITEM.Favor.decliningText' },
-                        { key: 'system.losingText', labelKey: 'ARKHAM_HORROR.ITEM.Favor.losingText' }
+                        { key: 'system.benefit', labelKey: 'ITEM.Favor.benefit' },
+                        { key: 'system.decliningText', labelKey: 'ITEM.Favor.decliningText' },
+                        { key: 'system.losingText', labelKey: 'ITEM.Favor.losingText' }
                     )
                 }
 
@@ -380,6 +388,67 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 if (requestedGroupIds && !requestedGroupIds.includes(groupId)) continue
                 const actions = await Promise.all(itemsByGroup[groupId].map(makeReferenceAction))
                 if (actions.length > 0) await this.addActions(actions, { id: groupId, type: 'system' })
+            }
+        }
+
+        async #buildKnacks (groupIds) {
+            if (!this.actor) return
+
+            const knackGroupIds = ['knacks_untiered', 'knacks_tier1', 'knacks_tier2', 'knacks_tier3', 'knacks_tier4', 'knacks_weaknesses']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !knackGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
+
+            const allKnacks = (this.actor.items?.contents ?? []).filter(item => item?.type === 'knack')
+            const knacks = allKnacks.filter(item => !item.system?.isNPCweakness)
+
+            const makeKnackAction = async item => {
+                const usage = item.system?.usage
+                const usageMax = Number(usage?.max ?? 0)
+                const properties = usageMax > 0
+                    ? [{ label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: `${Number(usage?.remaining ?? 0)}/${usageMax}` }]
+                    : []
+
+                return {
+                    id: `reference_${item.id}`,
+                    name: item.name,
+                    encodedValue: ['reference', item.id].join(this.delimiter),
+                    system: { actionTypeId: 'reference', actionId: item.id },
+                    cssClass: ITEM_ACTION_CLASS,
+                    img: getItemImage(item),
+                    isItem: true,
+                    tooltip: {
+                        content: await buildItemTooltip(item, { properties }),
+                        class: 'tah-arkham-item-tooltip'
+                    }
+                }
+            }
+
+            const groups = [
+                {
+                    groupId: 'knacks_untiered',
+                    items: knacks.filter(item => ![1, 2, 3, 4].includes(Number(item.system?.tier ?? 0)))
+                },
+                ...[1, 2, 3, 4].map(tier => ({
+                    groupId: `knacks_tier${tier}`,
+                    items: knacks.filter(item => Number(item.system?.tier ?? 0) === tier)
+                })),
+                ...(this.actor.type === 'npc'
+                    ? [{
+                        groupId: 'knacks_weaknesses',
+                        items: allKnacks.filter(item => item.system?.isNPCweakness)
+                    }]
+                    : [])
+            ]
+
+            for (const group of groups) {
+                const { groupId } = group
+                if (requestedGroupIds && !requestedGroupIds.includes(groupId)) continue
+
+                const actions = await Promise.all(group.items.map(makeKnackAction))
+
+                if (actions.length > 0) {
+                    await this.addActions(actions, { id: groupId, type: 'system' })
+                }
             }
         }
 

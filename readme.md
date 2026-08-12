@@ -40,7 +40,8 @@ Upgrade note:
 - **Healing**: Treatment (Heal Damage, Heal Injury), Horror (Introspection, Counseling), and GM-only Recovery
 - **Injury & Trauma**: Roll Injury/Trauma plus non-rolling references for the actor's current Injuries and Traumas
 - **Weapons**: Organizes owned weapons into Melee Combat, Ranged Combat, or Other subgroups and rolls them via the system dialog
-- **Items**: Lists owned Useful Items, Relics, Tomes, and Favors as non-rolling references that open their item sheets
+- **Items**: Lists owned Protective Equipment, Useful Items, Relics, Tomes, and Favors as non-rolling references that open their item sheets
+- **Knacks**: Organizes non-tiered Knacks under Knacks and tiered Knacks under Tier 1 through Tier 4, with a Weaknesses subgroup for NPCs
 - **Spells**: Lists owned spells and rolls them via the system dialog
 
 Weapons, Items, and Spells support the Token Action HUD Core **Display Icons** preference and show enriched Arkham item details in full tooltip mode.

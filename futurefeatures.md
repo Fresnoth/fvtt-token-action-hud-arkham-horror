@@ -5,7 +5,11 @@ This file contains **only** the ideas/features that are **not implemented yet**.
 ## HUD / UX
 
 - Replace the scoped post-render tooltip workaround if Token Action HUD Core adds a supported per-action and per-info tooltip opt-out.
-- Revisit rich Weapon, Spell, Useful Item, Relic, Tome, and Favor tooltips for consistent compact typography, property spacing, and wrapping across Core styles and dock positions.
+- Clean up rich tooltips for Weapons, Spells, Protective Equipment, Useful Items, Relics, Tomes, Favors, Knacks, Weaknesses, Injuries, and Traumas.
+  - Establish a compact, consistent title/body hierarchy.
+  - Improve inline property spacing, separators, alignment, and wrapping.
+  - Keep enriched descriptions and special-rules sections readable without oversized or narrow tooltip layouts.
+  - Verify behavior across Core styles, HUD scales, and dock positions.
 
 ## Multi-token
 
@@ -21,7 +25,7 @@ This file contains **only** the ideas/features that are **not implemented yet**.
 
 ## Equipment and Knacks
 
-- Consider adding other equipment and knacks as non-rolling reference actions where useful.
+- Consider adding other equipment as non-rolling reference actions where useful.
 
 ## Compatibility Hardening
 
