@@ -17,6 +17,8 @@ export const CORE_MODULE = {
  */
 export const ARKHAM_API_MIN_VERSION = '13.0.37'
 
+export const TOOLTIP_SUPPRESS_CLASS = 'tah-arkham-no-tooltip'
+
 /**
  * Groups
  */
@@ -25,9 +27,20 @@ export const GROUP = {
     complex_action: { id: 'complex_action', name: 'ARKHAM_HORROR.LABELS.Skills', type: 'system' },
     reactions: { id: 'reactions', name: 'ARKHAM_HORROR.KNACK_SHEET.RollKind.Reaction', type: 'system' },
     insight: { id: 'insight', name: 'ARKHAM_HORROR.LABELS.Insight', type: 'system' },
-    healing: { id: 'healing', name: 'ARKHAM_HORROR.HEALING.SectionTitle', type: 'system' },
-    injury_trauma: { id: 'injury_trauma', name: 'ARKHAM_HORROR.LABELS.InjuriesTrauma', type: 'system' },
+    healing_treatment: { id: 'healing_treatment', name: 'ARKHAM_HORROR.HEALING.Treatment.Legend', type: 'system' },
+    healing_horror: { id: 'healing_horror', name: 'ARKHAM_HORROR.HEALING.Horror.Legend', type: 'system' },
+    healing_recovery: { id: 'healing_recovery', name: 'ARKHAM_HORROR.HEALING.Recovery.MenuLabel', type: 'system' },
+    injury_trauma_actions: { id: 'injury_trauma_actions', name: 'tokenActionHud.template.actions', type: 'system' },
+    injuries: { id: 'injuries', name: 'TYPES.Item.injury', type: 'system' },
+    traumas: { id: 'traumas', name: 'TYPES.Item.trauma', type: 'system' },
     weapons: { id: 'weapons', name: 'ARKHAM_HORROR.LABELS.Weapons', type: 'system' },
+    weapons_melee: { id: 'weapons_melee', name: 'ARKHAM_HORROR.SKILL.meleeCombat', type: 'system' },
+    weapons_ranged: { id: 'weapons_ranged', name: 'ARKHAM_HORROR.SKILL.rangedCombat', type: 'system' },
+    weapons_other: { id: 'weapons_other', name: 'tokenActionHud.template.otherWeapons', type: 'system' },
+    useful_items: { id: 'useful_items', name: 'ARKHAM_HORROR.LABELS.UsefulItems', type: 'system' },
+    relics: { id: 'relics', name: 'ARKHAM_HORROR.LABELS.Relics', type: 'system' },
+    tomes: { id: 'tomes', name: 'ARKHAM_HORROR.LABELS.Tomes', type: 'system' },
+    favors: { id: 'favors', name: 'ARKHAM_HORROR.LABELS.Favors', type: 'system' },
     spells: { id: 'spells', name: 'ARKHAM_HORROR.LABELS.Spells', type: 'system' },
     dicepool_adjust: { id: 'dicepool_adjust', name: 'ARKHAM_HORROR.ABBR.Dicepool', type: 'system' },
     damage_adjust: { id: 'damage_adjust', name: 'ARKHAM_HORROR.LABELS.Damage', type: 'system' },

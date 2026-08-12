@@ -6,9 +6,16 @@
 
 - Added a Healing group for Arkham Horror RPG 14.2.0 with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
 - Added the Arkham Horror RPG 14.2.0 Recovery dialog to the Healing group for GMs on character and NPC actors through `api.resources.openRecoveryDialog`.
+- Added Treatment, Horror, and Recovery subgroups under Healing using the Arkham system labels.
+- Added an Injury & Trauma category with the Roll Injury/Trauma workflow and current Injury and Trauma item references.
+- Added Melee Combat, Ranged Combat, and Other subgroups under Weapons.
+- Added non-rolling Useful Item, Relic, Tome, and Favor references that open their item sheets.
+- Added optional item image tags and rich, bounded tooltips for weapons, spells, Useful Items, Relics, Tomes, and Favors.
 
 ### Changed
 
+- Suppressed redundant tooltips throughout Dicepool, Simple, Complex, Reaction, Insight, and Healing without modifying Foundry's global tooltip behavior.
+- Moved Roll Injury/Trauma out of Dicepool and into Injury & Trauma; Strain remains a Dicepool action.
 - Recovery is hidden from players and checked again at dispatch time so Token Action HUD matches the system sheet's GM-only workflow.
 - Strain eligibility now follows `api.resources.canStrain`, including Major NPC restrictions and once-only use.
 - Straining now delegates the full workflow to `api.resources.strain`, avoiding duplicate injury dialogs and preserving the system's confirmation, chat, and permission behavior.

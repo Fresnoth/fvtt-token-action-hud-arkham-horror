@@ -328,6 +328,10 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             case 'spell':
                 await this.#handleSpellAction(event, actor, actionId)
                 break
+            case 'reference':
+                event?.preventDefault?.()
+                this.renderItem(actor, actionId)
+                break
             case 'dicepool':
                 await this.#handleDicePoolAction(event, actor, actionId)
                 break

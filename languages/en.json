@@ -2,11 +2,14 @@
   "tokenActionHud": {
     "template": {
       "armor": "Armor",
+      "actions": "Actions",
       "containers": "Containers",
       "consumables": "Consumables",
       "equipment": "Equipment",
       "inventory": "Inventory",
       "item": "Item",
+      "items": "Items",
+      "otherWeapons": "Other",
       "weapons": "Weapons",
       "treasure": "Treasure",
       "settings": {

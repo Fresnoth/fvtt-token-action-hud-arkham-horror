@@ -32,13 +32,18 @@ Upgrade note:
 
 ## What is available in ALPHA (current tabs)
 
-- **Dicepool**: DP +/-, Damage/Horror +/-, Refresh, Discard Die, Discard All Dice, Strain, Injury/Trauma
+- **Dicepool**: DP +/-, Damage/Horror +/-, Refresh, Discard Die, Discard All Dice, Strain
 - **Simple**: Spend Regular Die / Spend Horror Die (API mode)
 - **Complex**: Skill rolls (opens the system dice roll dialog)
 - **Reaction**: Reaction-mode skill rolls (opens the system roll dialog)
 - **Insight**: Spend / Refresh (opens the system roll dialog)
-- **Weapons**: Lists owned weapons by order on the actor sheet and rolls them via the system dialog
-- **Spells**: Lists owned spells by order on the actor sheet and rolls them via the system dialog
+- **Healing**: Treatment (Heal Damage, Heal Injury), Horror (Introspection, Counseling), and GM-only Recovery
+- **Injury & Trauma**: Roll Injury/Trauma plus non-rolling references for the actor's current Injuries and Traumas
+- **Weapons**: Organizes owned weapons into Melee Combat, Ranged Combat, or Other subgroups and rolls them via the system dialog
+- **Items**: Lists owned Useful Items, Relics, Tomes, and Favors as non-rolling references that open their item sheets
+- **Spells**: Lists owned spells and rolls them via the system dialog
+
+Weapons, Items, and Spells support the Token Action HUD Core **Display Icons** preference and show enriched Arkham item details in full tooltip mode.
 
 ## Installation
 

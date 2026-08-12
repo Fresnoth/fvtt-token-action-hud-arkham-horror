@@ -62,15 +62,19 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 id: 'healing',
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.HEALING.SectionTitle'),
                 groups: [
-                    { ...groups.healing, nestId: 'healing_actions' },
+                    { ...groups.healing_treatment, nestId: 'healing_treatment' },
+                    { ...groups.healing_horror, nestId: 'healing_horror' },
+                    { ...groups.healing_recovery, nestId: 'healing_recovery' },
                 ]
             },
             {
-                nestId: 'injury_trauma',
-                id: 'injury_trauma',
+                nestId: 'injurytrauma',
+                id: 'injurytrauma',
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.InjuriesTrauma'),
                 groups: [
-                    { ...groups.injury_trauma, nestId: 'injury_trauma_actions' },
+                    { ...groups.injury_trauma_actions, nestId: 'injurytrauma_actions' },
+                    { ...groups.injuries, nestId: 'injurytrauma_injuries' },
+                    { ...groups.traumas, nestId: 'injurytrauma_traumas' },
                 ]
             },
             {
@@ -78,7 +82,9 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 id: 'weapons',
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Weapons'),
                 groups: [
-                    { ...groups.weapons, nestId: 'weapons_list' },
+                    { ...groups.weapons_melee, nestId: 'weapons_melee' },
+                    { ...groups.weapons_ranged, nestId: 'weapons_ranged' },
+                    { ...groups.weapons_other, nestId: 'weapons_other' },
                 ]
             },
             {
@@ -87,6 +93,17 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 name: coreModule.api.Utils.i18n('ARKHAM_HORROR.LABELS.Spells'),
                 groups: [
                     { ...groups.spells, nestId: 'spells_list' },
+                ]
+            },
+            {
+                nestId: 'items',
+                id: 'items',
+                name: coreModule.api.Utils.i18n('tokenActionHud.template.items'),
+                groups: [
+                    { ...groups.useful_items, nestId: 'items_useful' },
+                    { ...groups.relics, nestId: 'items_relics' },
+                    { ...groups.tomes, nestId: 'items_tomes' },
+                    { ...groups.favors, nestId: 'items_favors' },
                 ]
             }
         ],
