@@ -6,13 +6,6 @@ export const MODULE = {
 }
 
 /**
- * Core module
- */
-export const CORE_MODULE = {
-    ID: 'token-action-hud-core'
-}
-
-/**
  * Arkham Horror system version where public API routing is required.
  */
 export const ARKHAM_API_MIN_VERSION = '13.0.37'
@@ -33,7 +26,6 @@ export const GROUP = {
     injury_trauma_actions: { id: 'injury_trauma_actions', name: 'tokenActionHud.template.actions', type: 'system' },
     injuries: { id: 'injuries', name: 'TYPES.Item.injury', type: 'system' },
     traumas: { id: 'traumas', name: 'TYPES.Item.trauma', type: 'system' },
-    weapons: { id: 'weapons', name: 'ARKHAM_HORROR.LABELS.Weapons', type: 'system' },
     weapons_melee: { id: 'weapons_melee', name: 'ARKHAM_HORROR.SKILL.meleeCombat', type: 'system' },
     weapons_ranged: { id: 'weapons_ranged', name: 'ARKHAM_HORROR.SKILL.rangedCombat', type: 'system' },
     weapons_other: { id: 'weapons_other', name: 'tokenActionHud.template.otherWeapons', type: 'system' },
@@ -52,5 +44,5 @@ export const GROUP = {
     dicepool_adjust: { id: 'dicepool_adjust', name: 'ARKHAM_HORROR.ABBR.Dicepool', type: 'system' },
     damage_adjust: { id: 'damage_adjust', name: 'ARKHAM_HORROR.LABELS.Damage', type: 'system' },
     horror_adjust: { id: 'horror_adjust', name: 'ARKHAM_HORROR.LABELS.Horror', type: 'system' },
-    dicepool_actions: { id: 'dicepool_actions', name: 'ARKHAM_HORROR.LABELS.Dicepool', type: 'system' }
+    dicepool_actions: { id: 'dicepool_actions', name: 'tokenActionHud.template.actions', type: 'system' }
 }

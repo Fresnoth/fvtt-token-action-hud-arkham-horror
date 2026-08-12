@@ -11,11 +11,13 @@
 - Added Melee Combat, Ranged Combat, and Other subgroups under Weapons.
 - Added non-rolling Useful Item, Relic, Tome, and Favor references that open their item sheets.
 - Added Protective Equipment as the first Items subgroup with non-rolling item references.
+- Added German, French, and Spanish translations for the module-owned HUD labels.
 - Added a Knacks category with Knacks, Tier 1 through Tier 4, and NPC-only Weaknesses non-rolling item references.
 - Added optional item image tags and rich, bounded tooltips for weapons, spells, Useful Items, Relics, Tomes, and Favors.
 
 ### Changed
 
+- Removed unused template scaffolding, unreachable action routes, stale capability probes, and CSS selectors from older Token Action HUD Core markup.
 - Suppressed redundant tooltips throughout Dicepool, Simple, Complex, Reaction, Insight, and Healing without modifying Foundry's global tooltip behavior.
 - Moved Roll Injury/Trauma out of Dicepool and into Injury & Trauma; Strain remains a Dicepool action.
 - Recovery is hidden from players and checked again at dispatch time so Token Action HUD matches the system sheet's GM-only workflow.

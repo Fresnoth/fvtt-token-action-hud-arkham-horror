@@ -1,0 +1,9 @@
+{
+  "tokenActionHud": {
+    "template": {
+      "actions": "Acciones",
+      "items": "Objetos",
+      "otherWeapons": "Otras"
+    }
+  }
+}

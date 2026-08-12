@@ -24,6 +24,24 @@
       "name": "English",
       "path": "languages/en.json",
       "flags": {}
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "languages/de.json",
+      "flags": {}
+    },
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "languages/fr.json",
+      "flags": {}
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "languages/es.json",
+      "flags": {}
     }
   ],
   "relationships": {

@@ -3,7 +3,6 @@ import { ActionHandler } from './action-handler.js'
 import { RollHandler as Core } from './roll-handler.js'
 import { MODULE } from './constants.js'
 import { DEFAULTS } from './defaults.js'
-import * as systemSettings from './settings.js'
 
 export let SystemManager = null
 
@@ -58,16 +57,6 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          */
         async registerDefaults () {
             return DEFAULTS
-        }
-
-        /**
-         * Register Token Action HUD system module settings
-         * Called by Token Action HUD Core
-         * @override
-         * @param {function} coreUpdate The Token Action HUD Core update function
-         */
-        registerSettings (coreUpdate) {
-            systemSettings.register(coreUpdate)
         }
 
         /**

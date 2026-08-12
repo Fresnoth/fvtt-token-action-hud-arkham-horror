@@ -547,7 +547,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         /**
-         * Build skills (skeleton)
+         * Build skill actions
          * @private
          */
         async #buildSkills (groupIds) {
@@ -564,7 +564,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             const actions = []
 
-            for (const [key, value] of Object.entries(skillsObject)) {
+            for (const key of Object.keys(skillsObject)) {
                 const encodedValue = ['skills', key].join(this.delimiter)
                 const labelKey = `ARKHAM_HORROR.SKILL.${key}`
                 const translated = coreModule.api.Utils.i18n(labelKey)
@@ -598,7 +598,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             const actions = []
 
-            for (const [key, value] of Object.entries(skillsObject)) {
+            for (const key of Object.keys(skillsObject)) {
                 const encodedValue = ['reaction', key].join(this.delimiter)
 
                 const labelKey = `ARKHAM_HORROR.SKILL.${key}`
