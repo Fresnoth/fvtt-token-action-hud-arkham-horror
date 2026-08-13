@@ -6,13 +6,29 @@ System module for [**Token Action HUD Core**](https://foundryvtt.com/packages/to
 
 ![Demo](.github/readme/token-action-hud-v1300-arkham-horror.gif)
 
-This is an **ALPHA** build focused on usability and stability. For planned work and deferred ideas, see [Future Features](futurefeatures.md).
+For planned work and deferred ideas, see [Future Features](futurefeatures.md).
 
 ## Requirements
 
-- Foundry VTT: `>= v13`
+- Foundry VTT: `>= v13.351`
 - Arkham Horror RPG System: `>= 13.0.35`
-- Token Action HUD Core: `>= 2.0.0`
+- Token Action HUD Core: `>= 2.1.1`
+
+## What is available in 14.1.0 (current tabs)
+
+- **Dicepool**: DP +/-, Damage/Horror +/-, Refresh, Discard Die, Discard All Dice, Strain
+- **Simple**: Spend Regular Die / Spend Horror Die (API mode)
+- **Complex**: Skill rolls (opens the system dice roll dialog)
+- **Reaction**: Reaction-mode skill rolls (opens the system roll dialog)
+- **Insight**: Spend / Refresh (opens the system roll dialog)
+- **Healing**: Treatment (Heal Damage, Heal Injury), Horror (Introspection, Counseling), and GM-only Recovery
+- **Injury & Trauma**: Roll Injury/Trauma plus non-rolling references for the actor's current Injuries and Traumas
+- **Weapons**: Organizes owned weapons into Melee Combat, Ranged Combat, or Other subgroups and rolls them via the system dialog
+- **Items**: Lists owned Protective Equipment, Useful Items, Relics, Tomes, and Favors as non-rolling references that open their item sheets
+- **Knacks**: Organizes non-tiered Knacks under Knacks and tiered Knacks under Tier 1 through Tier 4, with a Weaknesses subgroup for NPCs
+- **Spells**: Lists owned spells and rolls them via the system dialog
+
+Weapons, Items, and Spells support the Token Action HUD Core **Display Icons** preference and show enriched Arkham item details in full tooltip mode.
 
 ## Compatibility Mode v13.0.3
 
@@ -29,22 +45,6 @@ Upgrade note:
 
 - If you are on module `v13.0.2` and upgrade Arkham to `>= 13.0.37`, dicepool increment/decrement actions will not update correctly due to a system API breaking change.
 - Upgrade this module to `v13.0.3` (or newer) when upgrading the base Arkham system.
-
-## What is available in ALPHA (current tabs)
-
-- **Dicepool**: DP +/-, Damage/Horror +/-, Refresh, Discard Die, Discard All Dice, Strain
-- **Simple**: Spend Regular Die / Spend Horror Die (API mode)
-- **Complex**: Skill rolls (opens the system dice roll dialog)
-- **Reaction**: Reaction-mode skill rolls (opens the system roll dialog)
-- **Insight**: Spend / Refresh (opens the system roll dialog)
-- **Healing**: Treatment (Heal Damage, Heal Injury), Horror (Introspection, Counseling), and GM-only Recovery
-- **Injury & Trauma**: Roll Injury/Trauma plus non-rolling references for the actor's current Injuries and Traumas
-- **Weapons**: Organizes owned weapons into Melee Combat, Ranged Combat, or Other subgroups and rolls them via the system dialog
-- **Items**: Lists owned Protective Equipment, Useful Items, Relics, Tomes, and Favors as non-rolling references that open their item sheets
-- **Knacks**: Organizes non-tiered Knacks under Knacks and tiered Knacks under Tier 1 through Tier 4, with a Weaknesses subgroup for NPCs
-- **Spells**: Lists owned spells and rolls them via the system dialog
-
-Weapons, Items, and Spells support the Token Action HUD Core **Display Icons** preference and show enriched Arkham item details in full tooltip mode.
 
 ## Installation
 

@@ -6,7 +6,7 @@ This file contains **only** the ideas/features that are **not implemented yet**.
 
 - Replace the scoped post-render tooltip workaround if Token Action HUD Core adds a supported per-action and per-info tooltip opt-out.
 - Consider hiding redundant single-subgroup labels through Core's supported group setting (`settings: { showTitle: false }`) rather than CSS or post-render DOM changes. Candidates: Simple, Reaction, Insight, and Spells.
-- Evaluate using the Arkham Horror system's typography as the default HUD font when the Arkham style is selected.
+- Evaluate using the Arkham Horror system's typography through the module's scoped integration stylesheet.
   - Reuse system-owned font variables or loaded font faces rather than bundling duplicate font assets.
   - Keep a TAH/Core-safe fallback stack for missing fonts, partial system loads, and future system theme changes.
   - Verify compact labels, long translations, tooltips, and numeric controls at every supported HUD scale.

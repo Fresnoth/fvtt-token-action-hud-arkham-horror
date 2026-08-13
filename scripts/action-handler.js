@@ -33,8 +33,19 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
     const buildItemTooltip = async (item, { properties = [], fields = ['system.description'] } = {}) => {
         const propertyHtml = properties
             .filter(property => property.value !== null && property.value !== undefined && property.value !== '')
-            .map(property => `<span class="tah-arkham-tooltip-property"><strong>${escapeHtml(property.label)}:</strong> ${escapeHtml(property.value)}</span>`)
-            .join('&nbsp;|&nbsp;')
+            .map(property => {
+                const cssClass = property.fullWidth
+                    ? 'tah-arkham-tooltip-metadata-item tah-arkham-tooltip-metadata-item-wide'
+                    : 'tah-arkham-tooltip-metadata-item'
+
+                return [
+                    `<div class="${cssClass}">`,
+                    `<dt>${escapeHtml(property.label)}</dt>`,
+                    `<dd>${escapeHtml(property.value)}</dd>`,
+                    '</div>'
+                ].join('')
+            })
+            .join('')
 
         const fieldHtml = []
         for (const field of fields) {
@@ -43,16 +54,55 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             const labelKey = field.labelKey
             const heading = labelKey ? `<div class="tah-arkham-tooltip-section-title">${escapeHtml(localize(labelKey))}</div>` : ''
-            fieldHtml.push(`<section class="tah-arkham-tooltip-section">${heading}${content}</section>`)
+            const sectionClass = labelKey
+                ? 'tah-arkham-tooltip-section'
+                : 'tah-arkham-tooltip-section tah-arkham-tooltip-description'
+            fieldHtml.push(`<section class="${sectionClass}">${heading}<div class="tah-arkham-tooltip-section-content">${content}</div></section>`)
         }
 
         const content = [
             `<div class="tah-arkham-tooltip-title">${escapeHtml(item.name)}</div>`,
-            propertyHtml ? `<div class="tah-arkham-tooltip-properties">${propertyHtml}</div>` : '',
+            propertyHtml ? `<dl class="tah-arkham-tooltip-metadata">${propertyHtml}</dl>` : '',
             ...fieldHtml
         ].join('')
 
         return `<div class="tah-arkham-item-tooltip-content">${content}</div>`
+    }
+
+    const buildWeaponTooltip = async (item, statistics) => {
+        const statisticHtml = statistics
+            .filter(statistic => statistic.value !== null && statistic.value !== undefined && statistic.value !== '')
+            .map(statistic => {
+                const cssClass = statistic.fullWidth
+                    ? 'tah-arkham-weapon-statistic tah-arkham-weapon-statistic-wide'
+                    : 'tah-arkham-weapon-statistic'
+
+                return [
+                    `<div class="${cssClass}">`,
+                    `<dt>${escapeHtml(statistic.label)}</dt>`,
+                    `<dd>${escapeHtml(statistic.value)}</dd>`,
+                    '</div>'
+                ].join('')
+            })
+            .join('')
+
+        const specialRules = await enrichItemField(item, 'system.specialRules')
+        const specialRulesHtml = specialRules
+            ? [
+                '<section class="tah-arkham-tooltip-section tah-arkham-weapon-special-rules">',
+                `<div class="tah-arkham-tooltip-section-title">${escapeHtml(localize('ARKHAM_HORROR.PROPS.SpecialRules'))}</div>`,
+                `<div class="tah-arkham-tooltip-section-content">${specialRules}</div>`,
+                '</section>'
+            ].join('')
+            : ''
+
+        return [
+            '<div class="tah-arkham-item-tooltip-content tah-arkham-weapon-tooltip-content">',
+            `<div class="tah-arkham-tooltip-title">${escapeHtml(item.name)}</div>`,
+            statisticHtml ? `<dl class="tah-arkham-weapon-statistics">${statisticHtml}</dl>` : '',
+            specialRulesHtml,
+            '</div>'
+        ].join('')
     }
 
     const getItemImage = item => coreModule.api.Utils.getImage(item)
@@ -247,20 +297,14 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     cssClass: ITEM_ACTION_CLASS,
                     img: getItemImage(item),
                     tooltip: {
-                        content: await buildItemTooltip(item, {
-                            properties: [
-                                { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel },
-                                { label: localize('ARKHAM_HORROR.PROPS.Damage'), value: item.system?.damage },
-                                { label: localize('ARKHAM_HORROR.PROPS.Range'), value: item.system?.range },
-                                { label: localize('ARKHAM_HORROR.PROPS.InjuryRating'), value: item.system?.injuryRating },
-                                { label: localize('ARKHAM_HORROR.PROPS.Ammunition'), value: ammunitionLabel }
-                            ],
-                            fields: [
-                                'system.description',
-                                { key: 'system.specialRules', labelKey: 'ARKHAM_HORROR.PROPS.SpecialRules' }
-                            ]
-                        }),
-                        class: 'tah-arkham-item-tooltip'
+                        content: await buildWeaponTooltip(item, [
+                            { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel, fullWidth: true },
+                            { label: localize('ARKHAM_HORROR.PROPS.Damage'), value: item.system?.damage },
+                            { label: localize('ARKHAM_HORROR.PROPS.Range'), value: item.system?.range },
+                            { label: localize('ARKHAM_HORROR.PROPS.InjuryRating'), value: item.system?.injuryRating },
+                            { label: localize('ARKHAM_HORROR.PROPS.Ammunition'), value: ammunitionLabel }
+                        ]),
+                        class: 'tah-arkham-item-tooltip tah-arkham-weapon-tooltip'
                     }
                 }
             }
@@ -304,7 +348,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     tooltip: {
                         content: await buildItemTooltip(item, {
                             properties: [
-                                { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel }
+                                { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel, fullWidth: true }
                             ]
                         }),
                         class: 'tah-arkham-item-tooltip'
@@ -324,7 +368,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const items = this.actor.items?.contents ?? []
             const itemsByGroup = {
                 protective_equipment: items.filter(item => item?.type === 'protective_equipment'),
-                useful_items: items.filter(item => item?.type === 'useful_item'),
+                useful_items: items.filter(item => item?.type === 'useful_item' && item.system?.hasSpecialRules === true),
                 relics: items.filter(item => item?.type === 'relic'),
                 tomes: items.filter(item => item?.type === 'tome'),
                 favors: items.filter(item => item?.type === 'favor')
@@ -341,25 +385,31 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     { label: localize('ARKHAM_HORROR.PROPS.Quantity'), value: Number(item.system?.quantity ?? 1) > 1 ? item.system.quantity : '' },
                     { label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: usageLabel }
                 ]
-                const fields = ['system.description']
+                const fields = []
 
                 if (item.type === 'protective_equipment') {
-                    properties.push({ label: localize('ITEM.ProtectiveEquipment.cost'), value: item.system?.cost })
                     fields.push(
                         { key: 'system.defensiveBenefit', labelKey: 'ITEM.ProtectiveEquipment.defensiveBenefit' },
                         { key: 'system.specialRules', labelKey: 'ITEM.ProtectiveEquipment.specialRules' }
                     )
-                } else if (item.type === 'useful_item' && item.system?.hasSpecialRules !== false) {
+                } else if (item.type === 'useful_item') {
                     fields.push({ key: 'system.specialRules', labelKey: 'ARKHAM_HORROR.PROPS.SpecialRules' })
+                } else if (item.type === 'relic') {
+                    fields.push('system.description')
                 } else if (item.type === 'tome') {
                     properties.push(
                         { label: localize('ITEM.Tome.understood'), value: item.system?.understood ? localize('Yes', 'Yes') : localize('No', 'No') },
                         { label: localize('ITEM.Tome.attuned'), value: item.system?.attuned ? localize('Yes', 'Yes') : localize('No', 'No') },
-                        { label: localize('ITEM.Tome.attunementDifficulty'), value: item.system?.attunementDifficulty }
+                        { label: localize('ITEM.Tome.attunementDifficulty'), value: item.system?.attunementDifficulty, fullWidth: true }
+                    )
+                    fields.push(
+                        { key: 'system.knowledgeBonus', labelKey: 'ITEM.Tome.knowledgeBonus' },
+                        'system.description'
                     )
                 } else if (item.type === 'favor') {
-                    properties.push({ label: localize('ITEM.Favor.xp'), value: item.system?.xp })
+                    properties.push({ label: localize('ITEM.Favor.xp'), value: item.system?.xp, fullWidth: true })
                     fields.push(
+                        'system.description',
                         { key: 'system.benefit', labelKey: 'ITEM.Favor.benefit' },
                         { key: 'system.decliningText', labelKey: 'ITEM.Favor.decliningText' },
                         { key: 'system.losingText', labelKey: 'ITEM.Favor.losingText' }
@@ -405,7 +455,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 const usage = item.system?.usage
                 const usageMax = Number(usage?.max ?? 0)
                 const properties = usageMax > 0
-                    ? [{ label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: `${Number(usage?.remaining ?? 0)}/${usageMax}` }]
+                    ? [{ label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: `${Number(usage?.remaining ?? 0)}/${usageMax}`, fullWidth: true }]
                     : []
 
                 return {

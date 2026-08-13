@@ -17,6 +17,7 @@
 
 ### Changed
 
+- Removed the obsolete Arkham Horror selectable HUD style and replaced it with always-loaded, Arkham-scoped action and tooltip styling that works with Core themes.
 - Removed unused template scaffolding, unreachable action routes, stale capability probes, and CSS selectors from older Token Action HUD Core markup.
 - Suppressed redundant tooltips throughout Dicepool, Simple, Complex, Reaction, Insight, and Healing without modifying Foundry's global tooltip behavior.
 - Moved Roll Injury/Trauma out of Dicepool and into Injury & Trauma; Strain remains a Dicepool action.
