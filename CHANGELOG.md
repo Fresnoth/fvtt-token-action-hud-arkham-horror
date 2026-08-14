@@ -2,16 +2,16 @@
 
 ## 14.1.0
 
-### Upgrade Notice - Existing Worlds coming from <= v14.0.0 Arkham Horror TAH 
+### Upgrade Notice - Existing Worlds coming from <= v14.0.0 Arkham Horror TAH
 
 - Version 14.1.0 changes default group IDs and nesting for Weapons and Injury & Trauma, and adds Healing, Knacks, and Items groups.
 - Token Action HUD Core can sometimes preserve saved user and actor layouts and will not merge these new defaults into them.
 - The module will check for groups introduced by the new layout on the first HUD build and will show affected clients a one-time dismissable warning pointing to the README guide.
 
 #### If the new groups are missing
-- An affected user can **Unlock HUD -> Edit HUD -> Reset Layout** 
+- An affected user can **Unlock HUD -> Edit HUD -> Reset Layout**
 **OR**
-- **As a GM in Game Settings -> Token Action HUD Core -> Layout Settings -> Reset All Layouts**  
+- **As a GM in Game Settings -> Token Action HUD Core -> Layout Settings -> Reset All Layouts**
 
 **IMPORTANT NOTE** both of the above options will remove any user specific HUD customization but is the fastest path if users are not seeing some of the new options that they should.  It does not modify Arkham actor or item data.
 
@@ -19,8 +19,8 @@ If users need to preserve a customized layout they can manually replace the lega
 
 ### Added
 
-#### **Updates for Akrham Horror RPG System 14.2+**
-- Added a Healing group for with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
+#### **Updates for Arkham Horror RPG System 14.2+**
+- Added a Healing group with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
 - Added the (GM-only workflow dialog) **Recovery** to the Healing group through `api.resources.openRecoveryDialog`.
 - Added Treatment, Horror, and Recovery subgroups under Healing.
 
@@ -34,7 +34,7 @@ If users need to preserve a customized layout they can manually replace the lega
 
 ### Changed
 
-#### **Changes for Akrham Horror RPG System 14.2+**
+#### **Changes for Arkham Horror RPG System 14.2+**
 - Strain remains a Dicepool action however, it will only appear if the actor has taken damage, now following `api.resources.canStrain`, including Major NPC restrictions and once-only use.
 
 #### Clean-up and bug fixes
