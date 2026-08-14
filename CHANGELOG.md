@@ -1,38 +1,47 @@
 # Changelog
 
-## Unreleased
+## 14.1.0
 
-### Upgrade Notice
+### Upgrade Notice - Existing Worlds coming from <= v14.0.0 Arkham Horror TAH 
 
 - Version 14.1.0 changes default group IDs and nesting for Weapons and Injury & Trauma, and adds Healing, Knacks, and Items groups.
-- Token Action HUD Core preserves saved user and actor layouts and does not merge these new defaults into them. Users should inspect their HUD after upgrading rather than assuming the defaults were refreshed.
-- The module now checks for groups introduced by the current layout on the first HUD build and shows affected clients a one-time persistent warning pointing to the README upgrade guide.
-- If the new groups are missing, affected users may use **Unlock HUD** -> **Edit HUD** -> **Reset Layout** to rebuild from current defaults.
-- **Reset Layout in TAH Core settings is destructive to HUD customization (but is the fastest path if users are not seeing some of the new options):** it clears the current user's saved layout and position plus the selected actor's saved HUD group settings and action selections. It does not modify Arkham actor or item data.
-- Users who need to preserve a customized layout can manually replace the legacy Weapons and Injury & Trauma subgroups and add the new top-level groups using Token Action HUD Core 2.1's unlock, `+`, and context-menu controls. See the README for exact steps.
+- Token Action HUD Core can sometimes preserve saved user and actor layouts and will not merge these new defaults into them.
+- The module will check for groups introduced by the new layout on the first HUD build and will show affected clients a one-time dismissable warning pointing to the README guide.
+
+#### If the new groups are missing
+- An affected user can **Unlock HUD -> Edit HUD -> Reset Layout** 
+**OR**
+- **As a GM in Game Settings -> Token Action HUD Core -> Layout Settings -> Reset All Layouts**  
+
+**IMPORTANT NOTE** both of the above options will remove any user specific HUD customization but is the fastest path if users are not seeing some of the new options that they should.  It does not modify Arkham actor or item data.
+
+If users need to preserve a customized layout they can manually replace the legacy Weapons and Injury & Trauma subgroups and add the new top-level groups using Token Action HUD Core 2.1's unlock, `+`, and context-menu controls.
 
 ### Added
 
-- Added a Healing group for Arkham Horror RPG 14.2.0 with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
-- Added the Arkham Horror RPG 14.2.0 Recovery dialog to the Healing group for GMs on character and NPC actors through `api.resources.openRecoveryDialog`.
-- Added Treatment, Horror, and Recovery subgroups under Healing using the Arkham system labels.
-- Added an Injury & Trauma category with the Roll Injury/Trauma workflow and current Injury and Trauma item references.
+#### **Updates for Akrham Horror RPG System 14.2+**
+- Added a Healing group for with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.
+- Added the (GM-only workflow dialog) **Recovery** to the Healing group through `api.resources.openRecoveryDialog`.
+- Added Treatment, Horror, and Recovery subgroups under Healing.
+
+#### Updates for all
+- Added an Injury & Trauma category with the Roll Injury/Trauma and current Injury and Trauma item references.
 - Added Melee Combat, Ranged Combat, and Other subgroups under Weapons.
-- Added non-rolling Useful Item, Relic, Tome, and Favor references that open their item sheets.
-- Added Protective Equipment as the first Items subgroup with non-rolling item references.
+- Added an Item category with non-rolling Protective Equipment, Useful Item, Relic, Tome, and Favor references that open their item sheets.
 - Added German, French, and Spanish translations for the module-owned HUD labels.
-- Added a Knacks category with Knacks, Tier 1 through Tier 4, and NPC-only Weaknesses non-rolling item references.
-- Added optional item image tags and rich, bounded tooltips for weapons, spells, Useful Items, Relics, Tomes, and Favors.
+- Added a Knacks category with non-rolling Knacks, and subgroups Tier 1 through Tier 4 and NPC-only Weaknesses that open their item sheets.
+- Added item image tags and tooltips for Weapons, Spells, Protective Equipment, Useful Items, Relics, Tomes, and Favors.
 
 ### Changed
 
-- Removed the obsolete Arkham Horror selectable HUD style and replaced it with always-loaded, Arkham-scoped action and tooltip styling that works with Core themes.
-- Removed unused template scaffolding, unreachable action routes, stale capability probes, and CSS selectors from older Token Action HUD Core markup.
-- Suppressed redundant tooltips throughout Dicepool, Simple, Complex, Reaction, Insight, and Healing without modifying Foundry's global tooltip behavior.
-- Moved Roll Injury/Trauma out of Dicepool and into Injury & Trauma; Strain remains a Dicepool action.
-- Recovery is hidden from players and checked again at dispatch time so Token Action HUD matches the system sheet's GM-only workflow.
-- Strain eligibility now follows `api.resources.canStrain`, including Major NPC restrictions and once-only use.
-- Straining now delegates the full workflow to `api.resources.strain`, avoiding duplicate injury dialogs and preserving the system's confirmation, chat, and permission behavior.
+#### **Changes for Akrham Horror RPG System 14.2+**
+- Strain remains a Dicepool action however, it will only appear if the actor has taken damage, now following `api.resources.canStrain`, including Major NPC restrictions and once-only use.
+
+#### Clean-up and bug fixes
+- Removed the obsolete Arkham Horror selectable HUD style and replaced it with always-loaded, Arkham-scoped css styling that works with Core themes.
+- General cleanup of the repo from dead TAH Core template code.
+- Eliminated redundant tooltips throughout Dicepool, Simple, Complex, Reaction, Insight, and Healing.
+- Moved Roll Injury/Trauma out of Dicepool and into a new category Injury & Trauma
 
 ## 14.0.0 - 2026-07-31
 
