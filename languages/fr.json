@@ -1,0 +1,14 @@
+{
+  "tokenActionHud": {
+    "arkhamHorror": {
+      "upgrade": {
+        "layoutNotice": "Votre disposition Token Action HUD enregistrée provient d'une version antérieure du module et peut ne pas contenir les nouveaux groupes. Utilisez Déverrouiller le HUD > Modifier le HUD > Réinitialiser la disposition, ou consultez la section sur les dispositions existantes dans le README du module pour conserver vos personnalisations."
+      }
+    },
+    "template": {
+      "actions": "Actions",
+      "items": "Objets",
+      "otherWeapons": "Autres"
+    }
+  }
+}

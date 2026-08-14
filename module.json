@@ -10,19 +10,40 @@
     }
   ],
   "url": "https://github.com/fresnoth/fvtt-token-action-hud-arkham-horror",
-  "version": "14.0.0",
+  "version": "14.1.0",
   "compatibility": {
-    "minimum": "13",
-    "verified": "14.359"
+    "minimum": "13.351",
+    "verified": "14"
   },
   "esmodules": [
     "scripts/init.js"
+  ],
+  "styles": [
+    "styles/tah-arkham-horror.css"
   ],
   "languages": [
     {
       "lang": "en",
       "name": "English",
       "path": "languages/en.json",
+      "flags": {}
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "languages/de.json",
+      "flags": {}
+    },
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "languages/fr.json",
+      "flags": {}
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "languages/es.json",
       "flags": {}
     }
   ],
@@ -41,7 +62,7 @@
         "id": "token-action-hud-core",
         "type": "module",
         "compatibility": {
-          "minimum": "2.0.0",
+          "minimum": "2.1.1",
           "verified": "2.1.1"
         }
       }

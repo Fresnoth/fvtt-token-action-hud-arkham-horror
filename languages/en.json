@@ -1,20 +1,14 @@
 {
   "tokenActionHud": {
-    "template": {
-      "armor": "Armor",
-      "containers": "Containers",
-      "consumables": "Consumables",
-      "equipment": "Equipment",
-      "inventory": "Inventory",
-      "item": "Item",
-      "weapons": "Weapons",
-      "treasure": "Treasure",
-      "settings": {
-        "displayUnequipped": {
-          "hint": "Choose whether to display unequipped items on the HUD",
-          "name": "Display Unequipped"
-        }
+    "arkhamHorror": {
+      "upgrade": {
+        "layoutNotice": "Your saved Token Action HUD layout is from an earlier module version and may be missing new groups. Use Unlock HUD > Edit HUD > Reset Layout, or see Upgrading Existing HUD Layouts in the module README to preserve customizations."
       }
+    },
+    "template": {
+      "actions": "Actions",
+      "items": "Items",
+      "otherWeapons": "Other"
     }
   }
 }

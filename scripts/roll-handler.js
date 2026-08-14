@@ -231,18 +231,11 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 _debug('MISMATCH: trusting encodedValue', { parsedActionTypeId: parsed.actionTypeId, systemActionTypeId: systemAction.actionTypeId })
             }
 
-            const renderable = ['item']
-
-            if (renderable.includes(actionTypeId) && this.isRenderItem()) {
-                const renderItem = this.renderItem ?? this.doRenderItem
-                return renderItem?.call(this, this.actor, actionId)
-            }
-
             // If single actor is selected
             if (this.actor) {
                 if (this.actor?.type === 'vehicle') return
                 _debug('single actor route', { actorId: this.actor?.id, actorName: this.actor?.name })
-                await this.#handleAction(event, this.actor, this.token, actionTypeId, actionId)
+                await this.#handleAction(event, this.actor, actionTypeId, actionId)
                 return
             }
 
@@ -255,39 +248,19 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 return
             }
 
-            const token = controlledTokens[0]
-            const actor = token.actor
-            await this.#handleAction(event, actor, token, actionTypeId, actionId)
+            const actor = controlledTokens[0].actor
+            await this.#handleAction(event, actor, actionTypeId, actionId)
         }
-
-        /**
-         * Handle action hover
-         * Called by Token Action HUD Core when an action is hovered on or off
-         * @override
-         * @param {object} event        The event
-         * @param {string} encodedValue The encoded value
-         */
-        async handleActionHover (event, encodedValue) {}
-
-        /**
-         * Handle group click
-         * Called by Token Action HUD Core when a group is right-clicked while the HUD is locked
-         * @override
-         * @param {object} event The event
-         * @param {object} group The group
-         */
-        async handleGroupClick (event, group) {}
 
         /**
          * Handle action
          * @private
          * @param {object} event        The event
          * @param {object} actor        The actor
-         * @param {object} token        The token
          * @param {string} actionTypeId The action type id
          * @param {string} actionId     The actionId
          */
-        async #handleAction (event, actor, token, actionTypeId, actionId) {
+        async #handleAction (event, actor, actionTypeId, actionId) {
             if (actor?.type === 'vehicle') return
 
             // Some systems/actions want to override the action type via metadata.
@@ -301,9 +274,6 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             _debug('route via actionTypeId', { actionTypeId, actionId })
 
             switch (actionTypeId) {
-            case 'item':
-                this.#handleItemAction(event, actor, actionId)
-                break
             case 'simple':
                 await this.#handleSimpleAction(event, actor, actionId)
                 break
@@ -316,17 +286,24 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             case 'insight':
                 await this.#handleInsightAction(event, actor, actionId)
                 break
+            case 'healing':
+                await this.#handleHealingAction(event, actor, actionId)
+                break
+            case 'recovery':
+                await this.#handleRecoveryAction(event, actor, actionId)
+                break
             case 'weapon':
                 await this.#handleWeaponAction(event, actor, actionId)
                 break
             case 'spell':
                 await this.#handleSpellAction(event, actor, actionId)
                 break
+            case 'reference':
+                event?.preventDefault?.()
+                this.renderItem(actor, actionId)
+                break
             case 'dicepool':
                 await this.#handleDicePoolAction(event, actor, actionId)
-                break
-            case 'utility':
-                this.#handleUtilityAction(token, actionId)
                 break
             }
 
@@ -437,6 +414,59 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 }
             } catch (err) {
                 console.error('TAH Arkham Horror: error handling insight action', { actionId, actorId: actor?.id }, err)
+            }
+        }
+
+        /**
+         * Handle healing roll actions
+         * @private
+         * @param {object} event
+         * @param {object} actor
+         * @param {string} actionId The healing roll kind
+         */
+        async #handleHealingAction (event, actor, actionId) {
+            try {
+                event?.preventDefault?.()
+                if (!actor) return
+
+                const compat = getSystemCompat()
+                if (!compat.rolls.openHealDialog) {
+                    _warnMissingApiOnce(compat, 'healing', 'api.rolls.openHealDialog')
+                    return
+                }
+
+                await compat.apiRoot.rolls.openHealDialog(actor, { rollKind: actionId })
+            } catch (err) {
+                console.error('TAH Arkham Horror: error handling healing action', { actorId: actor?.id, rollKind: actionId }, err)
+            }
+        }
+
+        /**
+         * Handle the GM recovery tool
+         * @private
+         * @param {object} event
+         * @param {object} actor
+         * @param {string} actionId
+         */
+        async #handleRecoveryAction (event, actor, actionId) {
+            try {
+                event?.preventDefault?.()
+                if (!actor || actor.type === 'vehicle' || actionId !== 'open') return
+
+                if (!game.user?.isGM) {
+                    ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.HEALING.Reasons.PERMISSION_DENIED'))
+                    return
+                }
+
+                const compat = getSystemCompat()
+                if (!compat.resources.openRecoveryDialog) {
+                    _warnMissingApiOnce(compat, 'recovery', 'api.resources.openRecoveryDialog')
+                    return
+                }
+
+                await compat.apiRoot.resources.openRecoveryDialog(actor, { source: 'token-action-hud' })
+            } catch (err) {
+                console.error('TAH Arkham Horror: error handling recovery action', { actorId: actor?.id }, err)
             }
         }
 
@@ -662,32 +692,13 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                     }
 
                     if (actionId === 'strain') {
-                        if (!actor?.isOwner) {
-                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.PermissionStrainActor'))
+                        const strain = compat.apiRoot?.resources?.strain ?? compat.apiRoot?.dicepool?.strain
+                        if (typeof strain !== 'function') {
+                            _warnMissingApiOnce(compat, 'dicepool', 'api.resources.strain')
                             return
                         }
 
-                        const currentDamage = Number(actor.system?.damage ?? 0)
-                        if (currentDamage <= 0) {
-                            ui.notifications.warn(game.i18n.localize('ARKHAM_HORROR.Warnings.StrainRequiresDamage'))
-                            return
-                        }
-
-                        if (!compat.dicepool.strain) {
-                            _warnMissingApiOnce(compat, 'dicepool', 'api.dicepool.strain')
-                            return
-                        }
-
-                        await compat.apiRoot.dicepool.strain(actor, { source: 'token-action-hud' })
-
-                        const injuryDialog = compat.apiRoot?.rolls?.openInjuryTraumaDialog ?? compat.apiRoot?.rolls?.openInjuryDialog
-                        if (typeof injuryDialog === 'function') {
-                            await injuryDialog(actor, {
-                                rollKind: 'injury',
-                                modifier: 0,
-                                rollSource: 'strain'
-                            })
-                        }
+                        await strain(actor, { source: 'token-action-hud' })
                     }
 
                     return
@@ -698,7 +709,6 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 if (actionId === 'injury_trauma') {
                     const InjuryTraumaRollApp = await _getInjuryTraumaRollApp()
                     if (!InjuryTraumaRollApp) return
-                    // NEED TO REMOVE MODIFIER 0 because of change to this API in system 13.0.34
                     InjuryTraumaRollApp.getInstance({ actor, rollKind: 'injury' }).render(true)
                     return
                 }
@@ -849,7 +859,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         }
 
         /**
-         * Handle skill action (skeleton)
+         * Handle skill action
          * @private
          * @param {object} event    The event
          * @param {object} actor    The actor
@@ -904,32 +914,5 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             }
         }
 
-        /**
-         * Handle item action
-         * @private
-         * @param {object} event    The event
-         * @param {object} actor    The actor
-         * @param {string} actionId The action id
-         */
-        #handleItemAction (event, actor, actionId) {
-            const item = actor.items.get(actionId)
-            item.toChat(event)
-        }
-
-        /**
-         * Handle utility action
-         * @private
-         * @param {object} token    The token
-         * @param {string} actionId The action id
-         */
-        async #handleUtilityAction (token, actionId) {
-            switch (actionId) {
-            case 'endTurn':
-                if (game.combat?.current?.tokenId === token.id) {
-                    await game.combat?.nextTurn()
-                }
-                break
-            }
-        }
     }
 })

@@ -1,9 +1,7 @@
 // System Module Imports
 import { ActionHandler } from './action-handler.js'
 import { RollHandler as Core } from './roll-handler.js'
-import { MODULE } from './constants.js'
 import { DEFAULTS } from './defaults.js'
-import * as systemSettings from './settings.js'
 
 export let SystemManager = null
 
@@ -58,33 +56,6 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
          */
         async registerDefaults () {
             return DEFAULTS
-        }
-
-        /**
-         * Register Token Action HUD system module settings
-         * Called by Token Action HUD Core
-         * @override
-         * @param {function} coreUpdate The Token Action HUD Core update function
-         */
-        registerSettings (coreUpdate) {
-            systemSettings.register(coreUpdate)
-        }
-
-        /**
-         * Returns styles to Token Action HUD Core
-         * Called by Token Action HUD Core
-         * @override
-         * @returns {object} The TAH system styles
-         */
-        registerStyles () {
-            return {
-                arkhamHorror: {
-                    class: 'tah-style-template-style', // The class to add to first DIV element
-                    file: 'tah-template-style', // The file without the css extension
-                    moduleId: MODULE.ID, // The module ID
-                    name: 'Arkham Horror Style' // The name to display in the Token Action HUD Core 'Style' module setting
-                }
-            }
         }
     }
 })

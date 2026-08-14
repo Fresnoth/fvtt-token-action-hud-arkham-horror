@@ -1,0 +1,14 @@
+{
+  "tokenActionHud": {
+    "arkhamHorror": {
+      "upgrade": {
+        "layoutNotice": "Tu diseño guardado de Token Action HUD pertenece a una versión anterior del módulo y puede que no incluya los grupos nuevos. Usa Desbloquear HUD > Editar HUD > Restablecer diseño, o consulta la sección sobre diseños existentes en el README del módulo para conservar las personalizaciones."
+      }
+    },
+    "template": {
+      "actions": "Acciones",
+      "items": "Objetos",
+      "otherWeapons": "Otras"
+    }
+  }
+}

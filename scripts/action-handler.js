@@ -1,8 +1,120 @@
 import { getSystemCompat } from './system-compat.js'
+import { TOOLTIP_SUPPRESS_CLASS } from './constants.js'
 
 export let ActionHandler = null
 
 Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
+    const ITEM_ACTION_CLASS = 'tah-arkham-item-action'
+
+    const escapeHtml = value => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;')
+
+    const localize = (key, fallback = key) => {
+        const value = coreModule.api.Utils.i18n(key)
+        return value && value !== key ? value : fallback
+    }
+
+    const enrichItemField = async (item, key) => {
+        const value = foundry.utils.getProperty(item, key)
+        if (!value) return ''
+
+        return foundry.applications.ux.TextEditor.implementation.enrichHTML(value, {
+            secrets: item.isOwner,
+            async: true,
+            rollData: item.getRollData(),
+            relativeTo: item
+        })
+    }
+
+    const buildItemTooltip = async (item, { properties = [], fields = ['system.description'] } = {}) => {
+        const propertyHtml = properties
+            .filter(property => property.value !== null && property.value !== undefined && property.value !== '')
+            .map(property => {
+                const cssClass = property.fullWidth
+                    ? 'tah-arkham-tooltip-metadata-item tah-arkham-tooltip-metadata-item-wide'
+                    : 'tah-arkham-tooltip-metadata-item'
+
+                return [
+                    `<div class="${cssClass}">`,
+                    `<dt>${escapeHtml(property.label)}</dt>`,
+                    `<dd>${escapeHtml(property.value)}</dd>`,
+                    '</div>'
+                ].join('')
+            })
+            .join('')
+
+        const fieldHtml = []
+        for (const field of fields) {
+            const content = await enrichItemField(item, field.key ?? field)
+            if (!content) continue
+
+            const labelKey = field.labelKey
+            const heading = labelKey ? `<div class="tah-arkham-tooltip-section-title">${escapeHtml(localize(labelKey))}</div>` : ''
+            const sectionClass = labelKey
+                ? 'tah-arkham-tooltip-section'
+                : 'tah-arkham-tooltip-section tah-arkham-tooltip-description'
+            fieldHtml.push(`<section class="${sectionClass}">${heading}<div class="tah-arkham-tooltip-section-content">${content}</div></section>`)
+        }
+
+        const content = [
+            `<div class="tah-arkham-tooltip-title">${escapeHtml(item.name)}</div>`,
+            propertyHtml ? `<dl class="tah-arkham-tooltip-metadata">${propertyHtml}</dl>` : '',
+            ...fieldHtml
+        ].join('')
+
+        return `<div class="tah-arkham-item-tooltip-content">${content}</div>`
+    }
+
+    const buildWeaponTooltip = async (item, statistics) => {
+        const statisticHtml = statistics
+            .filter(statistic => statistic.value !== null && statistic.value !== undefined && statistic.value !== '')
+            .map(statistic => {
+                const cssClass = statistic.fullWidth
+                    ? 'tah-arkham-weapon-statistic tah-arkham-weapon-statistic-wide'
+                    : 'tah-arkham-weapon-statistic'
+
+                return [
+                    `<div class="${cssClass}">`,
+                    `<dt>${escapeHtml(statistic.label)}</dt>`,
+                    `<dd>${escapeHtml(statistic.value)}</dd>`,
+                    '</div>'
+                ].join('')
+            })
+            .join('')
+
+        const specialRules = await enrichItemField(item, 'system.specialRules')
+        const specialRulesHtml = specialRules
+            ? [
+                '<section class="tah-arkham-tooltip-section tah-arkham-weapon-special-rules">',
+                `<div class="tah-arkham-tooltip-section-title">${escapeHtml(localize('ARKHAM_HORROR.PROPS.SpecialRules'))}</div>`,
+                `<div class="tah-arkham-tooltip-section-content">${specialRules}</div>`,
+                '</section>'
+            ].join('')
+            : ''
+
+        return [
+            '<div class="tah-arkham-item-tooltip-content tah-arkham-weapon-tooltip-content">',
+            `<div class="tah-arkham-tooltip-title">${escapeHtml(item.name)}</div>`,
+            statisticHtml ? `<dl class="tah-arkham-weapon-statistics">${statisticHtml}</dl>` : '',
+            specialRulesHtml,
+            '</div>'
+        ].join('')
+    }
+
+    const getItemImage = item => coreModule.api.Utils.getImage(item)
+
+    const suppressTooltips = actions => actions.map(action => ({
+        ...action,
+        cssClass: [...new Set([
+            ...String(action.cssClass ?? '').split(/\s+/).filter(Boolean),
+            TOOLTIP_SUPPRESS_CLASS
+        ])].join(' ')
+    }))
+
     /**
      * Extends Token Action HUD Core's ActionHandler class and builds system-defined actions for the HUD
      */
@@ -51,9 +163,21 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             await this.#buildReactions(groupIds)
             await this.#buildDicePool(groupIds)
             await this.#buildInsight(groupIds)
+            await this.#buildHealing(groupIds)
             await this.#buildInjuryTrauma(groupIds)
             await this.#buildWeapons(groupIds)
+            await this.#buildReferenceItems(groupIds)
             await this.#buildSpells(groupIds)
+            await this.#buildKnacks(groupIds)
+        }
+
+        #canStrainActor () {
+            const compat = this.systemCompat
+            if (!compat?.apiMode) return true
+            if (!compat?.resources?.strain && !compat?.dicepool?.strain) return false
+            if (!compat?.resources?.canStrain) return true
+
+            return compat.apiRoot.resources.canStrain(this.actor)?.ok === true
         }
 
         /**
@@ -83,7 +207,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 }
             ]
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+            await this.addActions(suppressTooltips(actions), { id: groupId, type: 'system' })
         }
 
         /**
@@ -93,34 +217,63 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
         async #buildInjuryTrauma (groupIds) {
             if (!this.actor) return
 
-            const groupId = 'injury_trauma'
+            const injuryTraumaGroupIds = ['injury_trauma_actions', 'injuries', 'traumas']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !injuryTraumaGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
 
-            // Only show if the actor has a dice pool (strain depends on it).
             if (!this.actor.system?.dicepool) return
 
-            const actions = [
-                {
+            const compat = this.systemCompat
+            const apiMode = compat?.apiMode === true
+
+            if ((!requestedGroupIds || requestedGroupIds.includes('injury_trauma_actions')) &&
+                (!apiMode || compat?.rolls?.openInjuryTraumaDialog || compat?.rolls?.openInjuryDialog)) {
+                const actions = [{
                     id: 'injury_trauma_roll',
                     name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.RollInjuryTrauma'),
                     encodedValue: ['dicepool', 'injury_trauma'].join(this.delimiter),
                     system: { actionTypeId: 'dicepool', actionId: 'injury_trauma' }
-                },
-                {
-                    id: 'injury_trauma_strain',
-                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.ACTIONS.StrainOneself'),
-                    encodedValue: ['dicepool', 'strain'].join(this.delimiter),
-                    system: { actionTypeId: 'dicepool', actionId: 'strain' }
-                }
+                }]
+                await this.addActions(suppressTooltips(actions), { id: 'injury_trauma_actions', type: 'system' })
+            }
+
+            const items = this.actor.items?.contents ?? []
+            const itemGroups = [
+                { groupId: 'injuries', type: 'injury' },
+                { groupId: 'traumas', type: 'trauma' }
             ]
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+            for (const itemGroup of itemGroups) {
+                if (requestedGroupIds && !requestedGroupIds.includes(itemGroup.groupId)) continue
+
+                const actions = await Promise.all(items
+                    .filter(item => item?.type === itemGroup.type)
+                    .map(async item => ({
+                        id: `reference_${item.id}`,
+                        name: item.name,
+                        encodedValue: ['reference', item.id].join(this.delimiter),
+                        system: { actionTypeId: 'reference', actionId: item.id },
+                        cssClass: ITEM_ACTION_CLASS,
+                        img: getItemImage(item),
+                        isItem: true,
+                        tooltip: {
+                            content: await enrichItemField(item, 'system.description'),
+                            class: 'tah-arkham-item-tooltip'
+                        }
+                    })))
+
+                if (actions.length > 0) {
+                    await this.addActions(actions, { id: itemGroup.groupId, type: 'system' })
+                }
+            }
         }
 
         async #buildWeapons (groupIds) {
             if (this.systemCompat?.apiMode && !this.systemCompat?.rolls?.openWeaponDialog) return
 
-            const groupId = 'weapons'
-            if (Array.isArray(groupIds) && groupIds.length > 0 && !groupIds.includes(groupId)) return
+            const weaponGroupIds = ['weapons_melee', 'weapons_ranged', 'weapons_other']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !weaponGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
 
             if (!this.actor) return
 
@@ -128,14 +281,45 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const weapons = items.filter(i => i?.type === 'weapon')
             if (weapons.length === 0) return
 
-            const actions = weapons.map(item => ({
-                id: `weapon_${item.id}`,
-                name: item.name,
-                encodedValue: ['weapon', item.id].join(this.delimiter),
-                system: { actionTypeId: 'weapon', actionId: item.id }
-            }))
+            const makeWeaponAction = async item => {
+                const skillKey = String(item.system?.skill ?? '')
+                const skillLabel = skillKey ? localize(`ARKHAM_HORROR.SKILL.${skillKey}`, skillKey) : ''
+                const ammunition = item.system?.ammunition
+                const ammunitionLabel = Number(ammunition?.max ?? 0) > 0
+                    ? `${Number(ammunition.current ?? 0)}/${Number(ammunition.max ?? 0)}`
+                    : ''
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+                return {
+                    id: `weapon_${item.id}`,
+                    name: item.name,
+                    encodedValue: ['weapon', item.id].join(this.delimiter),
+                    system: { actionTypeId: 'weapon', actionId: item.id },
+                    cssClass: ITEM_ACTION_CLASS,
+                    img: getItemImage(item),
+                    tooltip: {
+                        content: await buildWeaponTooltip(item, [
+                            { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel, fullWidth: true },
+                            { label: localize('ARKHAM_HORROR.PROPS.Damage'), value: item.system?.damage },
+                            { label: localize('ARKHAM_HORROR.PROPS.Range'), value: item.system?.range },
+                            { label: localize('ARKHAM_HORROR.PROPS.InjuryRating'), value: item.system?.injuryRating },
+                            { label: localize('ARKHAM_HORROR.PROPS.Ammunition'), value: ammunitionLabel }
+                        ]),
+                        class: 'tah-arkham-item-tooltip tah-arkham-weapon-tooltip'
+                    }
+                }
+            }
+
+            const weaponsByGroup = {
+                weapons_melee: weapons.filter(item => item.system?.skill === 'meleeCombat'),
+                weapons_ranged: weapons.filter(item => item.system?.skill === 'rangedCombat'),
+                weapons_other: weapons.filter(item => !['meleeCombat', 'rangedCombat'].includes(item.system?.skill))
+            }
+
+            for (const groupId of weaponGroupIds) {
+                if (requestedGroupIds && !requestedGroupIds.includes(groupId)) continue
+                const actions = await Promise.all(weaponsByGroup[groupId].map(makeWeaponAction))
+                if (actions.length > 0) await this.addActions(actions, { id: groupId, type: 'system' })
+            }
         }
 
         async #buildSpells (groupIds) {
@@ -150,14 +334,172 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const spells = items.filter(i => i?.type === 'spell')
             if (spells.length === 0) return
 
-            const actions = spells.map(item => ({
-                id: `spell_${item.id}`,
-                name: item.name,
-                encodedValue: ['spell', item.id].join(this.delimiter),
-                system: { actionTypeId: 'spell', actionId: item.id }
+            const actions = await Promise.all(spells.map(async item => {
+                const skillKey = String(item.system?.skill ?? '')
+                const skillLabel = skillKey ? localize(`ARKHAM_HORROR.SKILL.${skillKey}`, skillKey) : ''
+
+                return {
+                    id: `spell_${item.id}`,
+                    name: item.name,
+                    encodedValue: ['spell', item.id].join(this.delimiter),
+                    system: { actionTypeId: 'spell', actionId: item.id },
+                    cssClass: ITEM_ACTION_CLASS,
+                    img: getItemImage(item),
+                    tooltip: {
+                        content: await buildItemTooltip(item, {
+                            properties: [
+                                { label: localize('ARKHAM_HORROR.PROPS.Skill'), value: skillLabel, fullWidth: true }
+                            ]
+                        }),
+                        class: 'tah-arkham-item-tooltip'
+                    }
+                }
             }))
 
             await this.addActions(actions, { id: groupId, type: 'system' })
+        }
+
+        async #buildReferenceItems (groupIds) {
+            const itemGroupIds = ['protective_equipment', 'useful_items', 'relics', 'tomes', 'favors']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !itemGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
+            if (!this.actor) return
+
+            const items = this.actor.items?.contents ?? []
+            const itemsByGroup = {
+                protective_equipment: items.filter(item => item?.type === 'protective_equipment'),
+                useful_items: items.filter(item => item?.type === 'useful_item' && item.system?.hasSpecialRules === true),
+                relics: items.filter(item => item?.type === 'relic'),
+                tomes: items.filter(item => item?.type === 'tome'),
+                favors: items.filter(item => item?.type === 'favor')
+            }
+
+            const makeReferenceAction = async item => {
+                const usage = item.system?.usage
+                const usageMax = Number(usage?.max ?? 0)
+                const usageLabel = usageMax > 0
+                    ? `${Number(usage?.remaining ?? 0)}/${usageMax}`
+                    : ''
+
+                const properties = [
+                    { label: localize('ARKHAM_HORROR.PROPS.Quantity'), value: Number(item.system?.quantity ?? 1) > 1 ? item.system.quantity : '' },
+                    { label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: usageLabel }
+                ]
+                const fields = []
+
+                if (item.type === 'protective_equipment') {
+                    fields.push(
+                        { key: 'system.defensiveBenefit', labelKey: 'ITEM.ProtectiveEquipment.defensiveBenefit' },
+                        { key: 'system.specialRules', labelKey: 'ITEM.ProtectiveEquipment.specialRules' }
+                    )
+                } else if (item.type === 'useful_item') {
+                    fields.push({ key: 'system.specialRules', labelKey: 'ARKHAM_HORROR.PROPS.SpecialRules' })
+                } else if (item.type === 'relic') {
+                    fields.push('system.description')
+                } else if (item.type === 'tome') {
+                    properties.push(
+                        { label: localize('ITEM.Tome.understood'), value: item.system?.understood ? localize('Yes', 'Yes') : localize('No', 'No') },
+                        { label: localize('ITEM.Tome.attuned'), value: item.system?.attuned ? localize('Yes', 'Yes') : localize('No', 'No') },
+                        { label: localize('ITEM.Tome.attunementDifficulty'), value: item.system?.attunementDifficulty, fullWidth: true }
+                    )
+                    fields.push(
+                        { key: 'system.knowledgeBonus', labelKey: 'ITEM.Tome.knowledgeBonus' },
+                        'system.description'
+                    )
+                } else if (item.type === 'favor') {
+                    properties.push({ label: localize('ITEM.Favor.xp'), value: item.system?.xp, fullWidth: true })
+                    fields.push(
+                        'system.description',
+                        { key: 'system.benefit', labelKey: 'ITEM.Favor.benefit' },
+                        { key: 'system.decliningText', labelKey: 'ITEM.Favor.decliningText' },
+                        { key: 'system.losingText', labelKey: 'ITEM.Favor.losingText' }
+                    )
+                }
+
+                return {
+                    id: `reference_${item.id}`,
+                    name: item.name,
+                    encodedValue: ['reference', item.id].join(this.delimiter),
+                    system: { actionTypeId: 'reference', actionId: item.id },
+                    cssClass: ITEM_ACTION_CLASS,
+                    img: getItemImage(item),
+                    isItem: true,
+                    tooltip: {
+                        content: await buildItemTooltip(item, {
+                            properties,
+                            fields
+                        }),
+                        class: 'tah-arkham-item-tooltip'
+                    }
+                }
+            }
+
+            for (const groupId of itemGroupIds) {
+                if (requestedGroupIds && !requestedGroupIds.includes(groupId)) continue
+                const actions = await Promise.all(itemsByGroup[groupId].map(makeReferenceAction))
+                if (actions.length > 0) await this.addActions(actions, { id: groupId, type: 'system' })
+            }
+        }
+
+        async #buildKnacks (groupIds) {
+            if (!this.actor) return
+
+            const knackGroupIds = ['knacks_untiered', 'knacks_tier1', 'knacks_tier2', 'knacks_tier3', 'knacks_tier4', 'knacks_weaknesses']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !knackGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
+
+            const allKnacks = (this.actor.items?.contents ?? []).filter(item => item?.type === 'knack')
+            const knacks = allKnacks.filter(item => !item.system?.isNPCweakness)
+
+            const makeKnackAction = async item => {
+                const usage = item.system?.usage
+                const usageMax = Number(usage?.max ?? 0)
+                const properties = usageMax > 0
+                    ? [{ label: localize('ARKHAM_HORROR.LABELS.Remaining'), value: `${Number(usage?.remaining ?? 0)}/${usageMax}`, fullWidth: true }]
+                    : []
+
+                return {
+                    id: `reference_${item.id}`,
+                    name: item.name,
+                    encodedValue: ['reference', item.id].join(this.delimiter),
+                    system: { actionTypeId: 'reference', actionId: item.id },
+                    cssClass: ITEM_ACTION_CLASS,
+                    img: getItemImage(item),
+                    isItem: true,
+                    tooltip: {
+                        content: await buildItemTooltip(item, { properties }),
+                        class: 'tah-arkham-item-tooltip'
+                    }
+                }
+            }
+
+            const groups = [
+                {
+                    groupId: 'knacks_untiered',
+                    items: knacks.filter(item => ![1, 2, 3, 4].includes(Number(item.system?.tier ?? 0)))
+                },
+                ...[1, 2, 3, 4].map(tier => ({
+                    groupId: `knacks_tier${tier}`,
+                    items: knacks.filter(item => Number(item.system?.tier ?? 0) === tier)
+                })),
+                ...(this.actor.type === 'npc'
+                    ? [{
+                        groupId: 'knacks_weaknesses',
+                        items: allKnacks.filter(item => item.system?.isNPCweakness)
+                    }]
+                    : [])
+            ]
+
+            for (const group of groups) {
+                const { groupId } = group
+                if (requestedGroupIds && !requestedGroupIds.includes(groupId)) continue
+
+                const actions = await Promise.all(group.items.map(makeKnackAction))
+
+                if (actions.length > 0) {
+                    await this.addActions(actions, { id: groupId, type: 'system' })
+                }
+            }
         }
 
         /**
@@ -201,11 +543,61 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             if (actions.length === 0) return
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+            await this.addActions(suppressTooltips(actions), { id: groupId, type: 'system' })
         }
 
         /**
-         * Build skills (skeleton)
+         * Build healing and recovery actions
+         * @private
+         */
+        async #buildHealing (groupIds) {
+            if (!this.actor || this.actor.type === 'vehicle') return
+
+            const canRollHealing = this.actor.type === 'character' && this.systemCompat?.rolls?.openHealDialog
+            const canRecover = game.user?.isGM && this.systemCompat?.resources?.openRecoveryDialog
+            if (!canRollHealing && !canRecover) return
+
+            const healingGroupIds = ['healing_treatment', 'healing_horror', 'healing_recovery']
+            const requestedGroupIds = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds : null
+            if (requestedGroupIds && !healingGroupIds.some(groupId => requestedGroupIds.includes(groupId))) return
+
+            const makeHealingAction = rollKind => ({
+                    id: `healing_${rollKind}`,
+                    name: coreModule.api.Utils.i18n(`ARKHAM_HORROR.HEALING.RollKind.${rollKind}`),
+                    encodedValue: ['healing', rollKind].join(this.delimiter),
+                    system: { actionTypeId: 'healing', actionId: rollKind }
+                })
+
+            const treatmentActions = canRollHealing
+                ? ['heal-damage', 'heal-injury'].map(makeHealingAction)
+                : []
+            const horrorActions = canRollHealing
+                ? ['introspection', 'counseling'].map(makeHealingAction)
+                : []
+            const recoveryActions = []
+
+            if (canRecover) {
+                recoveryActions.push({
+                    id: 'recovery_open',
+                    name: coreModule.api.Utils.i18n('ARKHAM_HORROR.HEALING.Recovery.MenuLabel'),
+                    encodedValue: ['recovery', 'open'].join(this.delimiter),
+                    system: { actionTypeId: 'recovery', actionId: 'open' }
+                })
+            }
+
+            if ((!requestedGroupIds || requestedGroupIds.includes('healing_treatment')) && treatmentActions.length > 0) {
+                await this.addActions(suppressTooltips(treatmentActions), { id: 'healing_treatment', type: 'system' })
+            }
+            if ((!requestedGroupIds || requestedGroupIds.includes('healing_horror')) && horrorActions.length > 0) {
+                await this.addActions(suppressTooltips(horrorActions), { id: 'healing_horror', type: 'system' })
+            }
+            if ((!requestedGroupIds || requestedGroupIds.includes('healing_recovery')) && recoveryActions.length > 0) {
+                await this.addActions(suppressTooltips(recoveryActions), { id: 'healing_recovery', type: 'system' })
+            }
+        }
+
+        /**
+         * Build skill actions
          * @private
          */
         async #buildSkills (groupIds) {
@@ -222,7 +614,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             const actions = []
 
-            for (const [key, value] of Object.entries(skillsObject)) {
+            for (const key of Object.keys(skillsObject)) {
                 const encodedValue = ['skills', key].join(this.delimiter)
                 const labelKey = `ARKHAM_HORROR.SKILL.${key}`
                 const translated = coreModule.api.Utils.i18n(labelKey)
@@ -236,7 +628,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 })
             }
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+            await this.addActions(suppressTooltips(actions), { id: groupId, type: 'system' })
         }
 
         /**
@@ -256,7 +648,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
 
             const actions = []
 
-            for (const [key, value] of Object.entries(skillsObject)) {
+            for (const key of Object.keys(skillsObject)) {
                 const encodedValue = ['reaction', key].join(this.delimiter)
 
                 const labelKey = `ARKHAM_HORROR.SKILL.${key}`
@@ -271,7 +663,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
                 })
             }
 
-            await this.addActions(actions, { id: groupId, type: 'system' })
+            await this.addActions(suppressTooltips(actions), { id: groupId, type: 'system' })
         }
 
         /**
@@ -306,8 +698,7 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             const canRefresh = !apiMode || compat?.dicepool?.refresh
             const canDiscard = !apiMode || compat?.resources?.discardDice
             const canDiscardAll = !apiMode || compat?.resources?.discardAllDice
-            const canStrain = !apiMode || compat?.dicepool?.strain
-            const canInjuryTrauma = !apiMode || compat?.rolls?.openInjuryTraumaDialog || compat?.rolls?.openInjuryDialog
+            const canStrain = this.#canStrainActor()
 
             const adjustActions = []
             const damageActions = []
@@ -390,24 +781,22 @@ Hooks.once('tokenActionHudCoreApiReady', async (coreModule) => {
             if (canDiscard) makeAction('discard', 'ARKHAM_HORROR.ACTIONS.DiscardDie')
             if (canDiscardAll) makeAction('discard_all', 'ARKHAM_HORROR.ACTIONS.DiscardAllDice')
 
-            // Safety net: keep these accessible under Dicepool even if the Injury/Trauma tab is not rendered for any reason.
-            if (canInjuryTrauma) makeAction('injury_trauma', 'ARKHAM_HORROR.ACTIONS.RollInjuryTrauma')
             if (canStrain) makeAction('strain', 'ARKHAM_HORROR.ACTIONS.StrainOneself')
 
             if (adjustActions.length > 0) {
-                await this.addActions(adjustActions, { id: adjustGroupId, type: 'system' })
+                await this.addActions(suppressTooltips(adjustActions), { id: adjustGroupId, type: 'system' })
             }
 
             if (damageActions.length > 0) {
-                await this.addActions(damageActions, { id: damageGroupId, type: 'system' })
+                await this.addActions(suppressTooltips(damageActions), { id: damageGroupId, type: 'system' })
             }
 
             if (horrorActions.length > 0) {
-                await this.addActions(horrorActions, { id: horrorGroupId, type: 'system' })
+                await this.addActions(suppressTooltips(horrorActions), { id: horrorGroupId, type: 'system' })
             }
 
             if (actions.length > 0) {
-                await this.addActions(actions, { id: actionsGroupId, type: 'system' })
+                await this.addActions(suppressTooltips(actions), { id: actionsGroupId, type: 'system' })
             }
         }
     }
