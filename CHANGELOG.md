@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Upgrade Notice
+
+- Version 14.1.0 changes default group IDs and nesting for Weapons and Injury & Trauma, and adds Healing, Knacks, and Items groups.
+- Token Action HUD Core preserves saved user and actor layouts and does not merge these new defaults into them. Users should inspect their HUD after upgrading rather than assuming the defaults were refreshed.
+- The module now checks for groups introduced by the current layout on the first HUD build and shows affected clients a one-time persistent warning pointing to the README upgrade guide.
+- If the new groups are missing, affected users may use **Unlock HUD** -> **Edit HUD** -> **Reset Layout** to rebuild from current defaults.
+- **Reset Layout in TAH Core settings is destructive to HUD customization (but is the fastest path if users are not seeing some of the new options):** it clears the current user's saved layout and position plus the selected actor's saved HUD group settings and action selections. It does not modify Arkham actor or item data.
+- Users who need to preserve a customized layout can manually replace the legacy Weapons and Injury & Trauma subgroups and add the new top-level groups using Token Action HUD Core 2.1's unlock, `+`, and context-menu controls. See the README for exact steps.
+
 ### Added
 
 - Added a Healing group for Arkham Horror RPG 14.2.0 with Heal Damage, Heal Injury, Introspection, and Counseling rolls through `api.rolls.openHealDialog`.

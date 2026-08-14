@@ -1,5 +1,10 @@
 {
   "tokenActionHud": {
+    "arkhamHorror": {
+      "upgrade": {
+        "layoutNotice": "Dein gespeichertes Token Action HUD-Layout stammt aus einer früheren Modulversion und enthält möglicherweise nicht die neuen Gruppen. Verwende HUD entsperren > HUD bearbeiten > Layout zurücksetzen oder lies im Modul-README den Abschnitt zum Aktualisieren bestehender HUD-Layouts, um Anpassungen beizubehalten."
+      }
+    },
     "template": {
       "actions": "Aktionen",
       "items": "Gegenstände",
